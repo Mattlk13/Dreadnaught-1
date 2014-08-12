@@ -29,7 +29,7 @@ enum vgaColor {
 u8int backColor = COLOR_BLACK;
 u8int foreColor = COLOR_WHITE;
 
-static void moveCursor() {
+static void move_cursor() {
 	u16int cursorLocation = cursorY * 80 + cursorX;
 	outb(0x3D4, 14);
 	outb(0x3D5, cursorLocation >> 8);
@@ -84,7 +84,7 @@ void mon_put(char c) {
 	}
 
 	scroll();
-	moveCursor();
+	move_cursor();
 }
 
 void mon_clear() {
@@ -98,7 +98,7 @@ void mon_clear() {
 
 	cursorX = 0;
 	cursorY = 0;
-	moveCursor();
+	move_cursor();
 }
 
 void mon_write(const char *c) {
