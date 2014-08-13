@@ -1,4 +1,5 @@
-SOURCES=kernel/boot.o kernel/kmain.o io/monitor.o lib/common.o lib/string.o
+SOURCES := kernel/boot.o kernel/kmain.o io/monitor.o lib/common.o lib/string.o kernel/gdt.o \
+kernel/descriptor_tables.o kernel/interrupt.o kernel/isr.o
 INC=-Iinclude
 
 CC=i686-elf-gcc
