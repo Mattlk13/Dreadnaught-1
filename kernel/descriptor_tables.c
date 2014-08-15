@@ -1,6 +1,7 @@
 // descriptor_tables.c -- Brad Slayter
 
 #include "kernel/descriptor_tables.h"
+#include "io/monitor.h"
 
 extern void gdt_flush(u32int);
 extern void idt_flush(u32int);
@@ -17,7 +18,9 @@ idt_entry_t idt_entries[256];
 idt_ptr_t	idt_ptr;
 
 void init_descriptor_tables() {
+	mon_write("Init gdt\n");
 	init_gdt();
+	mon_write("Init idt\n");
 	init_idt();
 }
 

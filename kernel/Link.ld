@@ -1,5 +1,3 @@
-SEARCH_DIR(../include)
-
 ENTRY(start)
 SECTIONS
 {

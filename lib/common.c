@@ -2,6 +2,8 @@
 
 #include "lib/common.h"
 
+#include "io/monitor.h"
+
 void outb(u16int port, u8int value) {
 	asm volatile("outb %1, %0" : : "dN" (port), "a" (value));
 }
@@ -41,4 +43,36 @@ u32int strlen(char *str) {
 		len++;
 
 	return len;
+}
+
+extern void panic(const char *message, const char *file, u32int line)
+{
+    // We encountered a massive problem and have to stop.
+    asm volatile("cli"); // Disable interrupts.
+
+    mon_write("PANIC(");
+    mon_write(message);
+    mon_write(") at ");
+    mon_write(file);
+    mon_write(":");
+    mon_write_dec(line);
+    mon_write("\n");
+    // Halt by going into an infinite loop.
+    for(;;);
+}
+
+extern void panic_assert(const char *file, u32int line, const char *desc)
+{
+    // An assertion failed, and we have to panic.
+    asm volatile("cli"); // Disable interrupts.
+
+    mon_write("ASSERTION-FAILED(");
+    mon_write(desc);
+    mon_write(") at ");
+    mon_write(file);
+    mon_write(":");
+    mon_write_dec(line);
+    mon_write("\n");
+    // Halt by going into an infinite loop.
+    for(;;);
 }
