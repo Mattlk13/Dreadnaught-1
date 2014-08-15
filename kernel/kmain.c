@@ -47,7 +47,7 @@ int kmain(struct multiboot *mbootPtr) {
 	mon_write_hex(mbootPtr->m_memorySize);
 	mon_write("\n");
 
-	mem_init(0xF4240000, 0x100000 + kernelSize*512);
+	mem_init(0xF4240000, 0x100000 + kernelSize);
 
 	memory_region*	region = (memory_region*)0x1000;
 
@@ -74,6 +74,7 @@ int kmain(struct multiboot *mbootPtr) {
 
 	char str[] = "I am the ding dang diddly danger!";
 	kprintf(K_ERROR, "Heisenberg says: %s\n", str);
+	kprintf(K_WARN, "Here is that quote again:\n\t%s\nAnd the lucky number is %d", str, line);
 
 	virt_init();
 
@@ -84,9 +85,9 @@ int kmain(struct multiboot *mbootPtr) {
 	asm volatile("sti");
 	//mem_init_region(kernelSize, 0xF0000000);
 	u32int *arr = mem_alloc_blocks(sizeof(u32int) * 5);
-	//arr[4] = 32;
-	//mon_write_dec(arr[4]);
-	//mon_write("\n");
+	arr[4] = 32;
+	mon_write_dec(arr[4]);
+	mon_write("\n");
 
 	return 0xDEADBEEF;
 }
