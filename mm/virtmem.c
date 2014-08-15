@@ -7,6 +7,8 @@
 
 #include "io/monitor.h"
 
+#include "lib/stdio.h"
+
 #define PTABLE_ADDR_SPACE_SIZE 0x400000    // page table is 4mb
 #define DTABLE_ADDR_SPACE_SIZE 0x100000000 // page dir is 4gb
 #define PAGE_SIZE 4096 // pages are 4k
@@ -170,6 +172,6 @@ void virt_init() {
 
 	virt_switch_pdirectory(dir);
 
-	mon_write("Enable paging?\n");
+	kprintf(K_INFO, "Enable paging\n");
 	mem_enable_paging(1);
 }

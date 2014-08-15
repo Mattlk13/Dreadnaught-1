@@ -40,12 +40,8 @@ int kmain(struct multiboot *mbootPtr) {
 	
 	init_descriptor_tables();
 	mon_clear();
-	//init_paging();
-	mon_write("\"I am the one who knocks!\"\n");
-
-	mon_write("Mem size: ");
-	mon_write_hex(mbootPtr->m_memorySize);
-	mon_write("\n");
+	kprintf(K_INFO, "System Booted!\n");
+	kprintf(K_INFO, "\"I am the one who knocks!\"\n");
 
 	mem_init(0xF4240000, 0x100000 + kernelSize);
 
@@ -59,35 +55,25 @@ int kmain(struct multiboot *mbootPtr) {
 		if (i>0 && region[i].startLo==0)
 			break;
 
-		/*DebugPrintf ("region %i: start: 0x%x%x length (bytes): 0x%x%x type: %i (%s)\n", i, 
-			region[i].startHi, region[i].startLo,
-			region[i].sizeHi,region[i].sizeLo,
-			region[i].type, strMemoryTypes[region[i].type-1]);*/
-
 		mem_init_region(region[i].startLo, region[i].sizeLo);
 	}
 	mem_deinit_region (0x100000, kernelSize*512);
-	//DebugPrintf ("pmm regions initialized: %i allocation blocks; block size: %i bytes",
-	//	pmmngr_get_block_count (), pmmngr_get_block_size () );
-	u32int line = 73;
-	kprintf(K_INFO, "About to crash at line %d\n", line);
-
-	char str[] = "I am the ding dang diddly danger!";
-	kprintf(K_ERROR, "Heisenberg says: %s\n", str);
-	kprintf(K_WARN, "Here is that quote again:\n\t%s\nAnd the lucky number is %d", str, line);
+	kprintf(K_INFO, "Physical memory initialized\n");
 
 	virt_init();
+	kprintf(K_INFO, "Virtual memory initialized\n");
 
 	mem_init_region(0x100000+kernelSize*512, 0xF0000000);
-
-	mon_write("PAGING YEAHHHHHH\n");
+	kprintf(K_INFO, "Initialized a shit ton of memory\n");
 
 	asm volatile("sti");
+	kprintf(K_INFO, "Interrupts enabled\n");
 	//mem_init_region(kernelSize, 0xF0000000);
 	u32int *arr = mem_alloc_blocks(sizeof(u32int) * 5);
 	arr[4] = 32;
-	mon_write_dec(arr[4]);
-	mon_write("\n");
+	kprintf(K_INFO, "Memory alloc test: %d\n", arr[4]);
+	mem_free_blocks(arr, sizeof(u32int) * 5);
+	kprintf(K_INFO, "Memory test completed\n");
 
 	return 0xDEADBEEF;
 }

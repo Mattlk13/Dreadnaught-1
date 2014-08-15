@@ -10,11 +10,11 @@ void set_color_for_level(int level) {
 			mon_write("ERROR");
 			break;
 		case K_WARN:
-			mon_set_color(COLOR_BLACK, COLOR_LIGHT_GREEN);
+			mon_set_color(COLOR_BLACK, COLOR_LIGHT_BLUE);
 			mon_write("WARN");
 			break;
 		case K_INFO:
-			mon_set_color(COLOR_BLACK, COLOR_LIGHT_BLUE);
+			mon_set_color(COLOR_BLACK, COLOR_LIGHT_GREEN);
 			mon_write("INFO");
 			break;
 		default:

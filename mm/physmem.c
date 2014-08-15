@@ -2,6 +2,7 @@
 
 #include "mm/physmem.h"
 #include "io/monitor.h"
+#include "lib/stdio.h"
 
 #define BLOCKS_PER_BYTE 8 		// 8 blocks per byte
 #define BLOCK_SIZE 4096			// blocks are 4k each
@@ -208,7 +209,7 @@ void mem_enable_paging(u8int b) {
 	if (b == 1) {
     	cr0 |= 0x80000000; // Enable paging!
     	asm volatile("mov %0, %%cr0":: "r"(cr0));
-    	mon_write("Paging actually enabled!\n");
+    	kprintf(K_INFO, "Paging actually enabled!\n");
 	} else {
 		cr0 &= 0x7FFFFFFF;
 		asm volatile("mov %0, %%cr0":: "r"(cr0));
