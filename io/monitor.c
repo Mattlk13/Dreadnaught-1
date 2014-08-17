@@ -51,7 +51,7 @@ void mon_put(char c) {
 	u16int *location;
 
 	if (c == 0x08 && cursorX) { // backspace byte
-		cursorX--;
+		mon_backspace;
 	} else if (c == 0x09) {
 		cursorX = (cursorX + 4) & ~(4-1);
 	} else if (c == '\r') {

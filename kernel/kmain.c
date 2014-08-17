@@ -8,6 +8,7 @@
 #include "io/monitor.h"
 
 #include "kernel/descriptor_tables.h"
+#include "kernel/cmd.h"
 
 #include "mm/physmem.h"
 #include "mm/virtmem.h"
@@ -53,7 +54,7 @@ int kmain(struct multiboot *mbootPtr) {
 	virt_init();
 	kprintf(K_INFO, "Virtual memory initialized\n");
 
-	mem_init_region(0x100000+kernelSize*512, 0xF0000000);
+	mem_init_region(0x100000+kernelSize*512, 0xF4240000);
 	kprintf(K_INFO, "Initialized a shit ton of memory\n");
 
 	asm volatile("sti");
@@ -66,6 +67,14 @@ int kmain(struct multiboot *mbootPtr) {
 	kprintf(K_INFO, "Memory test completed\n");
 
 	kb_install_kb(1);
+
+	/*char c = 0;
+	while (c != '\n') {
+		c = getch();
+		mon_put(c);
+	}*/
+
+	start_cmd_prompt();
 
 	return 0xDEADBEEF;
 }

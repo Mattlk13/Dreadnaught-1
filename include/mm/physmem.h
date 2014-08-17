@@ -15,6 +15,7 @@ void *mem_alloc_block();
 void mem_free_block(void *p);
 void *mem_alloc_blocks(size_t sz);
 void mem_free_blocks(void *p, size_t sz);
+void *kmalloc(size_t sz);
 
 size_t mem_get_memory_size();
 u32int mem_get_block_count();

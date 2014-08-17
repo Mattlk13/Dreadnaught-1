@@ -458,6 +458,9 @@ char kb_key_to_ascii(int code) {
 			}
 		}
 
+		if (key == KEY_RETURN)
+			key = '\n';
+
 		return key;
 	//}
 

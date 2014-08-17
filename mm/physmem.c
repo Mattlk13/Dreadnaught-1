@@ -175,6 +175,14 @@ void mem_free_blocks(void *p, size_t sz) {
 	used_blocks -= sz;
 }
 
+void *kmalloc(size_t sz) {
+	if (sz <= BLOCK_SIZE)
+		return mem_alloc_block();
+	else
+		return mem_alloc_blocks(sz / BLOCK_SIZE);
+
+}
+
 size_t mem_get_memory_size() {
 	return memory_size;
 }
