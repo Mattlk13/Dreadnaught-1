@@ -8,9 +8,9 @@
 #define BLOCK_SIZE 4096			// blocks are 4k each
 #define BLOCK_ALIGN BLOCK_SIZE	// blocks are 4k aligned
 
-static u32int memory_size = 0; // size of phys mem
+static u32int memory_size = 0;  // size of phys mem
 static u32int used_blocks = 0;  // num blocks in use
-static u32int max_blocks = 0;  // max num of availible blocks
+static u32int max_blocks  = 0;  // max num of availible blocks
 static u32int *memory_map = 0;  // mem map bit array. each bit represents a block
 
 // MEMORY MAP INTERFACES
@@ -39,7 +39,6 @@ u8int mmap_test(int bit) {
 int mmap_first_free() {
 	for (u32int i = 0; i < mem_get_block_count(); i++) {
 		if (memory_map[i] != 0xFFFFFFFF) {
-			//mon_write("Does not equal 0xFFFFFFFF");
 			for (int j = 0; j < 32; j++) {
 				int bit = 1 << j;
 				if (!(memory_map[i] & bit))
@@ -120,14 +119,12 @@ void mem_deinit_region(u32int base, size_t size) {
 
 void *mem_alloc_block() {
 	if (mem_get_free_block_count() <= 0) {
-		mon_write("No blocks\n");
 		return 0; // out of memory
 	}
 
 	int frame = mmap_first_free();
 
 	if (frame == -1) {
-		mon_write("no frames\n");
 		return 0; // out of memory
 	}
 
@@ -149,26 +146,21 @@ void mem_free_block(void *p) {
 }
 
 void *mem_alloc_blocks(size_t sz) {
-	//mon_write("Checking space\n");
 	if (mem_get_free_block_count() <= sz)
 		return 0; // not enough space
 
-	//mon_write("Getting frame\n");
 	int frame = mmap_first_free_s(sz);
 
 	if (frame == -1)
 		return 0; // not enough space
 
-	//mon_write("Set mmap\n");
 	for (u32int i = 0; i < sz; i++) {
 		mmap_set(frame + i);
 	}
 
-	//mon_write("Get addr and increment blocks\n");
 	u32int addr = frame * BLOCK_SIZE;
 	used_blocks += sz;
 
-	//mon_write("Return\n");
 	return (void *)addr;
 }
 

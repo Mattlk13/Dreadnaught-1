@@ -104,7 +104,7 @@ void page_fault(registers_t regs) {
 	int reserved = regs.err_code & 0x8;
 	int id 		 = regs.err_code & 0x10;
 
-	mon_write("Page Fault! ( ");
+	kprintf(K_ERROR, "Page Fault! ( ");
 	if (present) {mon_write("present ");}
 	if (rw) {mon_write("read-only ");}
 	if (us) {mon_write("user-mode ");}
@@ -118,13 +118,13 @@ void page_fault(registers_t regs) {
 void virt_init() {
 	ptable *table = (ptable *)mem_alloc_block();
 	if (!table) {
-		mon_write("Exited early 96\n");
+		kprintf(K_ERROR, " Virtual Mem: Exited early 121\n");
 		return;
 	}
 
 	ptable *table2 = (ptable *)mem_alloc_block();
 	if (!table2) {
-		mon_write("Exited early 102\n");
+		kprintf(K_ERROR, " Virtual Mem: Exited early 127\n");
 		return;
 	}
 
@@ -149,7 +149,7 @@ void virt_init() {
 
 	pdirectory *dir = (pdirectory *)mem_alloc_blocks(3); // create dir table
 	if (!dir) {
-		mon_write("Exited early 127\n");
+		kprintf(K_ERROR, " Virtual Mem: Exited early 152\n");
 		return;
 	}
 

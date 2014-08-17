@@ -16,12 +16,8 @@ void isr_handler(registers_t regs) {
 		isr_t handler = interrupt_handlers[regs.int_no];
 		handler(regs);
 	} else {
-		kprintf(K_ERROR, "Recieved interrupt: %d", regs.int_no);
+		kprintf(K_ERROR, "Unhandled interrupt: %d\n", regs.int_no);
 	}
-
-	/*if (regs.int_no == 14) {
-		PANIC("Page Fault!");
-	}*/
 }
 
 void irq_handler(registers_t regs) {
@@ -35,5 +31,7 @@ void irq_handler(registers_t regs) {
 	if (interrupt_handlers[regs.int_no] != 0) {
 		isr_t handler = interrupt_handlers[regs.int_no];
 		handler(regs);
+	} else {
+		kprintf(K_ERROR, "Unhandled interrupt: %d\n", regs.int_no);
 	}
 }

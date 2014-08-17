@@ -4,18 +4,15 @@
 #include "lib/common.h"
 #include "lib/timer.h"
 #include "lib/bootinfo.h"
-
-#include "io/monitor.h"
 #include "lib/stdio.h"
+#include "io/monitor.h"
 
 #include "kernel/descriptor_tables.h"
 
-//#include "mm/paging.h"
 #include "mm/physmem.h"
 #include "mm/virtmem.h"
 
 typedef struct memory_region_struct {
-
 	u32int	startLo;	//base address
 	u32int	startHi;
 	u32int	sizeLo;		//length (in bytes)
@@ -23,15 +20,6 @@ typedef struct memory_region_struct {
 	u32int	type;
 	u32int	acpi_3_0;
 } memory_region;
-
-//! ...so we can print the different types of memory regions..
-/*char* strMemoryTypes[] = {
-
-	{"Available"},				//type 1
-	{"Reserved"},				//type 2
-	{"ACPI Reclaim"},	//type 3
-	{"ACPI NVS Memory"}			//type 4
-};*/
 
 extern u32int end;
 u32int kernelSize = (u32int)&end;
@@ -68,7 +56,7 @@ int kmain(struct multiboot *mbootPtr) {
 
 	asm volatile("sti");
 	kprintf(K_INFO, "Interrupts enabled\n");
-	//mem_init_region(kernelSize, 0xF0000000);
+	
 	u32int *arr = mem_alloc_blocks(sizeof(u32int) * 5);
 	arr[4] = 32;
 	kprintf(K_INFO, "Memory alloc test: %d\n", arr[4]);
