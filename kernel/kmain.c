@@ -12,6 +12,8 @@
 #include "mm/physmem.h"
 #include "mm/virtmem.h"
 
+#include "drivers/keyboard.h"
+
 typedef struct memory_region_struct {
 	u32int	startLo;	//base address
 	u32int	startHi;
@@ -62,6 +64,8 @@ int kmain(struct multiboot *mbootPtr) {
 	kprintf(K_INFO, "Memory alloc test: %d\n", arr[4]);
 	mem_free_blocks(arr, sizeof(u32int) * 5);
 	kprintf(K_INFO, "Memory test completed\n");
+
+	kb_install_kb(1);
 
 	return 0xDEADBEEF;
 }

@@ -1,6 +1,6 @@
 SOURCES := kernel/boot.o kernel/kmain.o io/monitor.o lib/common.o lib/string.o kernel/gdt.o \
 kernel/descriptor_tables.o kernel/interrupt.o kernel/isr.o lib/timer.o lib/stdio.o\
-mm/physmem.o mm/pte.o mm/pde.o mm/virtmem.o
+mm/physmem.o mm/pte.o mm/pde.o mm/virtmem.o drivers/keyboard.o
 
 INC=-Iinclude
 
