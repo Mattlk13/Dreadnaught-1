@@ -66,7 +66,7 @@ int kmain(struct multiboot *mbootPtr) {
 	mem_free_blocks(arr, sizeof(u32int) * 5);
 	kprintf(K_INFO, "Memory test completed\n");
 
-	kb_install_kb(1);
+	kb_install_kb();
 
 	/*char c = 0;
 	while (c != '\n') {

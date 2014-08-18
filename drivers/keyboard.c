@@ -497,7 +497,7 @@ u8int kb_self_test() {
 	return (kb_enc_read_buf() == 0x55) ? 1 : 0;
 }
 
-void kb_install_kb(int irq) {
+void kb_install_kb() {
 	kprintf(K_WARN, "Installing KB\n");
 	register_interrupt_handler(IRQ1, &kb_handler);
 

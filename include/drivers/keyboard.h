@@ -185,6 +185,6 @@ u8int kb_is_disabled();
 
 void kb_reset_system();
 
-void kb_install_kb(int);
+void kb_install_kb();
 
 #endif
