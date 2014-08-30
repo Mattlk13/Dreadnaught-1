@@ -498,7 +498,7 @@ u8int kb_self_test() {
 }
 
 void kb_install_kb() {
-	kprintf(K_WARN, "Installing KB\n");
+	kprintf(K_INFO, "Installing KB\n");
 	register_interrupt_handler(IRQ1, &kb_handler);
 
 	kb_bat_res = 1;

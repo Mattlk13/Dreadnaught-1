@@ -2,22 +2,25 @@
 ; This is the entry point of the kernel
 ; This does all the multiboot stuff
 
-MBOOT_PAGE_ALIGN	equ 1<<0
-MBOOT_MEM_INFO		equ 1<<1
-MBOOT_HEADER_MAGIC	equ 0x1BADB002
-MBOOT_HEADER_FLAGS	equ MBOOT_PAGE_ALIGN | MBOOT_MEM_INFO
-MBOOT_CHECKSUM		equ -(MBOOT_HEADER_MAGIC + MBOOT_HEADER_FLAGS)
-
 [BITS 32]
+[GLOBAL start]
+start:
+	mov esp, _sys_stack
+	jmp stublet
 
 [GLOBAL mboot]
-[EXTERN code]
-[EXTERN bss]
-[EXTERN end]
-
+ALIGN 4
 mboot:
-	dd MBOOT_HEADER_MAGIC
+	MBOOT_PAGE_ALIGN	equ 1<<0
+	MBOOT_MEM_INFO		equ 1<<1
+	MBOOT_HEADER_MAGIC	equ 0x1BADB002
+	MBOOT_HEADER_FLAGS	equ MBOOT_PAGE_ALIGN | MBOOT_MEM_INFO
+	MBOOT_CHECKSUM		equ -(MBOOT_HEADER_MAGIC + MBOOT_HEADER_FLAGS)
+	[EXTERN code]
+	[EXTERN bss]
+	[EXTERN end]
 
+	dd MBOOT_HEADER_MAGIC
 	dd MBOOT_HEADER_FLAGS
 	dd MBOOT_CHECKSUM
 
@@ -27,12 +30,15 @@ mboot:
 	dd end
 	dd start
 
-[GLOBAL start]
 [EXTERN kmain]
 
-start:
+stublet:
 	push ebx
 
 	cli
 	call kmain ; Execute kernel
 	jmp $
+
+SECTION .bss
+	resb 8192
+_sys_stack:
