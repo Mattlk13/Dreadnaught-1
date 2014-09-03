@@ -1,6 +1,7 @@
 // string.c -- Brad Slayter
 
 #include "lib/string.h"
+#include "lib/stdio.h"
 
 int strcmp(char *str1, char *str2) {
 	int i = 0;

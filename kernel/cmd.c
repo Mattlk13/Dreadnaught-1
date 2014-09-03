@@ -18,8 +18,10 @@ char get_line(char *buf) {
 		c = getch();
 
 		kprintf(K_NONE, "%c", c);
-		buf[i] = c;
-		i = i + 1;
+		if (c != '\n') {
+			buf[i] = c;
+			i++;
+		}
 	}
 	buf[i] = '\0';
 	//str[i] = '\0';
@@ -37,7 +39,7 @@ void read_cmd() {
 	get_line(buf);
 
 	if (!strcmp(buf, "help"))
-		kprintf(K_NONE, "Welcome to HeisenbergOS!!\n");
+		kprintf(K_NONE, "Welcome to HeisenbergOS!!\n\nList of Commands:\n...\nhelp?\n\n");
 }
 
 void start_cmd_prompt() {

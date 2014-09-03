@@ -29,10 +29,14 @@ u32int kernelSize = (u32int)&end;
 
 int kmain(multiboot_info_t *bootinfo) {
 	mon_clear();
-	init_descriptor_tables();
-	asm volatile("sti");
 	kprintf(K_OK, "System Booted!\n");
 	kprintf(K_INFO, "\"I am the one who knocks!\"\n");
+
+	init_descriptor_tables();
+	
+	asm volatile("sti");
+	kprintf(K_OK, "Interrupts Enabled\n");
+
 	kprintf(K_INFO, "Mem lower is %d\n", bootinfo->mem_lower);
 	kprintf(K_INFO, "Mem upper is %d\n", bootinfo->mem_upper);
 
@@ -43,15 +47,7 @@ int kmain(multiboot_info_t *bootinfo) {
 
 	kb_install_kb();
 
-	char c = 0;
-	while (c != '\n') {
-		//kprintf(K_INFO, "Looping\n");
-		c = getch();
-		//kprintf(K_INFO, "GETCH returned");
-		mon_put(c);
-	}
-
-	//start_cmd_prompt();
+	start_cmd_prompt();
 
 	return 0xDEADBEEF;
 }
