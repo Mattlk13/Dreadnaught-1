@@ -169,7 +169,7 @@ u8int kb_self_test();
 
 // get last scan code and keystroke
 u8int kb_get_last_scan();
-char kb_get_last_key();
+int kb_get_last_key();
 void kb_discard_last_key();
 
 // update LEDs

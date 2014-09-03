@@ -81,7 +81,7 @@ enum KB_ERROR {
 	KB_ERR_KEY					=	0xFF
 };
 
-static char scancode;
+static char scancode = 0;
 static u8int numlock, capslock, scrolllock;
 static u8int shift, ctrl, alt;
 static int kb_error = 0;
@@ -207,6 +207,8 @@ void kb_enc_send_cmd(u8int cmd) {
 }
 
 void kb_handler(registers_t regs) {
+	//kprintf(K_INFO, "THE HANDLER IS DOIN ITS SHIT");
+
 	static u8int extended = 0;
 
 	int code = 0;
@@ -356,8 +358,18 @@ void kb_set_leds(u8int num, u8int caps, u8int scroll) {
 	kb_enc_send_cmd(data);
 }
 
-char kb_get_last_key() {
-	return (scancode != INVALID_SCANCODE) ? ((char)kb_scancode_std[scancode]) : (KEY_UNKNOWN);
+int kb_get_last_key() {
+	if (scancode != INVALID_SCANCODE) {
+		//kprintf(K_INFO, "We found %d\n", kb_scancode_std[scancode]);
+		return kb_scancode_std[scancode];
+	} else {
+		//kprintf(K_INFO, "THIS IS AN UNKNOWN KEY");
+		return KEY_UNKNOWN;
+	}
+
+	//for (;;){}
+
+	//return (scancode != INVALID_SCANCODE) ? (kb_scancode_std[scancode]) : (KEY_UNKNOWN);
 }
 
 void kb_discard_last_key() {
@@ -502,7 +514,7 @@ void kb_install_kb() {
 	register_interrupt_handler(IRQ1, &kb_handler);
 
 	kb_bat_res = 1;
-	scancode = 0;
+	scancode = INVALID_SCANCODE;
 
 	numlock = scrolllock = capslock = 0;
 	kb_set_leds(numlock, scrolllock, capslock);

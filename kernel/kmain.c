@@ -27,18 +27,27 @@ typedef struct memory_region_struct {
 extern u32int end;
 u32int kernelSize = (u32int)&end;
 
-int kmain(struct multiboot *mbootPtr) {
-	
-	init_descriptor_tables();
+int kmain(multiboot_info_t *bootinfo) {
 	mon_clear();
+	init_descriptor_tables();
+	asm volatile("sti");
 	kprintf(K_OK, "System Booted!\n");
 	kprintf(K_INFO, "\"I am the one who knocks!\"\n");
+	kprintf(K_INFO, "Mem lower is %d\n", bootinfo->mem_lower);
+	kprintf(K_INFO, "Mem upper is %d\n", bootinfo->mem_upper);
+
+	mem_init(bootinfo->mem_upper, kernelSize);
+	kprintf(K_OK, "Physical Memory initialized\n");
+	virt_init();
+	kprintf(K_OK, "Virtual Memory initialized\n");
 
 	kb_install_kb();
 
 	char c = 0;
 	while (c != '\n') {
+		//kprintf(K_INFO, "Looping\n");
 		c = getch();
+		//kprintf(K_INFO, "GETCH returned");
 		mon_put(c);
 	}
 

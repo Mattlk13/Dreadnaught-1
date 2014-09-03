@@ -87,10 +87,14 @@ void mem_init(size_t memSize, u32int bitmap) {
 	memory_size = memSize;
 	memory_map = (u32int *)bitmap;
 	max_blocks = (mem_get_memory_size() * 1024) / BLOCK_SIZE;
-	used_blocks = mem_get_block_count();
+	used_blocks = 0;
 
-	// By default all memory is in use
-	memset(memory_map, 0xF, mem_get_block_count() / BLOCKS_PER_BYTE);
+	// By default all memory is free
+	memset(memory_map, 0x0, mem_get_block_count() / BLOCKS_PER_BYTE);
+
+	// reserve nececarry areas of memory
+	mem_deinit_region(0x0, bitmap+max_blocks);
+	kprintf(K_OK, "Memory initialized with %d blocks free\n", mem_get_free_block_count());
 }
 
 void mem_init_region(u32int base, size_t size) {

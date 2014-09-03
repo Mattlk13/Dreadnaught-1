@@ -73,8 +73,13 @@ void kprintf(int level, const char *format, ...) {
 char getch() {
 	int key = KEY_UNKNOWN;
 
-	while (key == KEY_UNKNOWN)
+	while (key == KEY_UNKNOWN) {
 		key = kb_get_last_key();
+
+		/*if (key == KEY_UNKNOWN)
+			kprintf(K_OK, "We did it right");
+		for (;;) {}*/
+	}
 
 	kb_discard_last_key();
 
