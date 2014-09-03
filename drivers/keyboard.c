@@ -360,16 +360,10 @@ void kb_set_leds(u8int num, u8int caps, u8int scroll) {
 
 int kb_get_last_key() {
 	if (scancode != INVALID_SCANCODE) {
-		//kprintf(K_INFO, "We found %d\n", kb_scancode_std[scancode]);
 		return kb_scancode_std[scancode];
 	} else {
-		//kprintf(K_INFO, "THIS IS AN UNKNOWN KEY");
 		return KEY_UNKNOWN;
 	}
-
-	//for (;;){}
-
-	//return (scancode != INVALID_SCANCODE) ? (kb_scancode_std[scancode]) : (KEY_UNKNOWN);
 }
 
 void kb_discard_last_key() {

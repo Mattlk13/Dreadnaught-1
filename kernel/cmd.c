@@ -10,24 +10,22 @@
 u8int should_exit = 0;
 
 char get_line(char *buf) {
-	//char str[1024];
-
 	char c = 0;
 	u8int i = 0;
 	while (c != '\n') {
 		c = getch();
 
 		kprintf(K_NONE, "%c", c);
-		if (c != '\n') {
+		if (c == 0x08) {
+			i--;
+			continue;
+		} else if (c != '\n') {
 			buf[i] = c;
 			i++;
 		}
 	}
 	buf[i] = '\0';
-	//str[i] = '\0';
-
-	//char *cmd = (char *)kmalloc(strlen(str));
-	//strcpy(cmd, str);
+	kprintf(K_INFO, "Length of buffer: %d\n", strlen(buf));
 
 	return 0;
 }
