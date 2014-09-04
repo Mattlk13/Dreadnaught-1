@@ -7,6 +7,8 @@
 #include "lib/stdio.h"
 #include "lib/string.h"
 
+#include "fs/vfs.h"
+
 u8int should_exit = 0;
 
 char get_line(char *buf) {
@@ -25,9 +27,37 @@ char get_line(char *buf) {
 		}
 	}
 	buf[i] = '\0';
-	kprintf(K_INFO, "Length of buffer: %d\n", strlen(buf));
 
 	return 0;
+}
+
+void cmd_read_file() {
+	kprintf(K_NONE, "Enter the name of the file to read:\n> ");
+	char buf[11];
+	get_line(buf);
+
+	FILE file = vol_open_file(buf);
+
+	if (file.flags == FS_INVALID) {
+		kprintf(K_ERROR, "Unable to open file %s\n", buf);
+		return;
+	}
+
+	while (!file.eof) {
+		unsigned char fileBuf[512];
+
+		vol_read_file(&file, fileBuf, 512);
+
+		kprintf(K_NONE, "%s", fileBuf);
+
+		if (!file.eof) {
+			kprintf(K_NONE, "\nPress the any key to continue...");
+			getch();
+			kprintf(K_NONE, "\n");
+		}
+	}
+
+	kprintf(K_NONE, "============= EOF =============\n");
 }
 
 void read_cmd() {
@@ -38,6 +68,8 @@ void read_cmd() {
 
 	if (!strcmp(buf, "help"))
 		kprintf(K_NONE, "Welcome to HeisenbergOS!!\n\nList of Commands:\n...\nhelp?\n\n");
+	else if (!strcmp(buf, "read"))
+		cmd_read_file();
 }
 
 void start_cmd_prompt() {

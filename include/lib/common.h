@@ -25,7 +25,7 @@ void memcpy(u8int *dest, const u8int *src, u32int len);
 void memset(void *dest, u8int val, u32int len);
 
 // string length
-u32int strlen(char *str);
+u32int strlen(const char *str);
 
 #define PANIC(msg) panic(msg, __FILE__, __LINE__);
 #define ASSERT(b) ((b) ? (void)0 : panic_assert(__FILE__, __LINE__, #b))

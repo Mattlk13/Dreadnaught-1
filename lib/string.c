@@ -42,3 +42,10 @@ char *strcat(char *dest, const char *source) {
 
 	return dest;
 }
+
+char toupper(char c) {
+	if (c >= 'a' && c <= 'z')
+		return 'A' + (c - 'a');
+	else
+		return c;
+}

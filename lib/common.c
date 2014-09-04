@@ -37,7 +37,7 @@ void memset(void *dest, u8int val, u32int len) {
     }
 }
 
-u32int strlen(char *str) {
+u32int strlen(const char *str) {
 	u32int len = 0;
 	while (str[len])
 		len++;

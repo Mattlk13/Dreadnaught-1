@@ -16,6 +16,8 @@
 #include "drivers/keyboard.h"
 #include "drivers/Floppy.h"
 
+#include "fs/fat12.h"
+
 typedef struct memory_region_struct {
 	u32int	startLo;	//base address
 	u32int	startHi;
@@ -75,7 +77,9 @@ int kmain(multiboot_info_t *bootinfo) {
 	flpy_set_working_drive(0);
 	flpy_install(38);
 
-	read_from_floppy();
+	fsys_fat_initialize();
+	kprintf(K_OK, "File system mounted\n");
+	//read_from_floppy();
 
 	start_cmd_prompt();
 
