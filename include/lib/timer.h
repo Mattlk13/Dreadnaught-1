@@ -6,5 +6,6 @@
 #include "lib/common.h"
 
 void init_timer(u32int freq);
+void sleep(int ms);
 
 #endif

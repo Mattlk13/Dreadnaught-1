@@ -10,9 +10,9 @@ u32int tick = 0;
 
 static void timer_callback(registers_t regs) {
 	tick++;
-	mon_write("Tick: ");
-	mon_write_dec(tick);
-	mon_write("\n");
+	//mon_write("Tick: ");
+	//mon_write_dec(tick);
+	//mon_write("\n");
 }
 
 void init_timer(u32int freq) {
@@ -27,4 +27,15 @@ void init_timer(u32int freq) {
 
 	outb(0x40, l);
 	outb(0x40, h);
+}
+
+void reset_tick_count() {
+	tick = 0;
+}
+
+void sleep(int ms) {
+	reset_tick_count();
+
+	while (tick < ms)
+		;
 }

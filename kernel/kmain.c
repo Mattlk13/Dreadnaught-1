@@ -14,6 +14,7 @@
 #include "mm/virtmem.h"
 
 #include "drivers/keyboard.h"
+#include "drivers/Floppy.h"
 
 typedef struct memory_region_struct {
 	u32int	startLo;	//base address
@@ -26,6 +27,27 @@ typedef struct memory_region_struct {
 
 extern u32int end;
 u32int kernelSize = (u32int)&end;
+
+void read_from_floppy() {
+	kprintf(K_WARN, "Attempt floppy read\n");
+	u8int *sector = 0;
+	sector = flpy_read_sector(0);
+
+	if (sector != 0) {
+		int i = 0;
+		for (int c = 0; c < 4; c++) {
+			for (int j = 0; j < 128; j++)
+				kprintf(K_NONE, "%x ", sector[i+j]);
+			i += 128;
+
+			kprintf(K_NONE, "\n\n");
+			kprintf(K_OK, "Press any key to continue...\n");
+			getch();
+		}
+	} else {
+		kprintf(K_ERROR, "Error reading sector from disk");
+	}
+}
 
 int kmain(multiboot_info_t *bootinfo) {
 	mon_clear();
@@ -45,7 +67,15 @@ int kmain(multiboot_info_t *bootinfo) {
 	virt_init();
 	kprintf(K_OK, "Virtual Memory initialized\n");
 
+	init_timer(100);
+
 	kb_install_kb();
+
+	// FLOPPY
+	flpy_set_working_drive(0);
+	flpy_install(38);
+
+	read_from_floppy();
 
 	start_cmd_prompt();
 
