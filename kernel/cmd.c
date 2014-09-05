@@ -57,7 +57,7 @@ void cmd_read_file() {
 		}
 	}
 
-	kprintf(K_NONE, "============= EOF =============\n");
+	kprintf(K_NONE, "\n============= EOF =============\n");
 }
 
 void read_cmd() {

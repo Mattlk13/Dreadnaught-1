@@ -47,7 +47,7 @@ void kprintf(int level, const char *format, ...) {
 		} else if (varNext == 1) {
 			switch (format[i]) {
 				case 'd':
-					mon_write_dec(va_arg(list, u32int));
+					mon_write_dec(va_arg(list, int));
 					break;
 				case 'x':
 					mon_write_hex(va_arg(list, u32int));

@@ -20,21 +20,17 @@ u16int inw(u16int port) {
 	return ret;
 }
 
-void memcpy(u8int *dest, const u8int *src, u32int len) {
-    const u8int *sp = (const u8int *)src;
-    u8int *dp = (u8int *)dest;
+void *memcpy(void *dest, const void *src, size_t len) {
+    const char *sp = (const char *)src;
+    char *dp = (char *)dest;
     for(; len != 0; len--) *dp++ = *sp++;
+    return dest;
 }
 
-void memset(void *dest, u8int val, u32int len) {
-    if (dest && len > 0) {
-        unsigned char* pChar =  dest;
-        int i = 0;
-        for ( i = 0; i < len; ++i) {
-            unsigned char temp = (unsigned char) val;
-            *pChar++ = temp; // or pChar[i] = temp (they both don't work)
-        }
-    }
+void *memset(void *dest, char val, size_t len) {
+    unsigned char *temp = (unsigned char *)dest;
+    for (; len != 0; len--, temp[len] = val);
+    return dest; 
 }
 
 u32int strlen(const char *str) {

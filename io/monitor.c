@@ -46,6 +46,9 @@ void mon_put(char c) {
 	/*backColor = COLOR_BLACK;
 	foreColor = COLOR_WHITE;*/
 
+	//if (c == ' ')
+	//	mon_set_color(COLOR_RED, COLOR_WHITE);
+
 	u8int attributeByte = (backColor << 4) | (foreColor & 0x0F);
 	u16int attribute = attributeByte << 8;
 	u16int *location;
@@ -72,6 +75,7 @@ void mon_put(char c) {
 
 	scroll();
 	move_cursor();
+	//mon_set_color(COLOR_BLACK, COLOR_WHITE);
 }
 
 void mon_clear() {
@@ -153,10 +157,13 @@ void mon_write_hex(u32int n) {
 	mon_write(pre);
 }
 
-void mon_write_dec(u32int n) {
+void mon_write_dec(int n) {
 	if (n == 0) {
         mon_put('0');
         return;
+    } else if (n < 0) {
+    	mon_put('-');
+    	n = -n;
     }
 
     s32int acc = n;

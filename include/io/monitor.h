@@ -34,6 +34,6 @@ void mon_write_line(const char *c);
 void DEBUG_mon_write(const char *c);
 void mon_backspace();
 void mon_write_hex(u32int n);
-void mon_write_dec(u32int n);
+void mon_write_dec(int n);
 
 #endif

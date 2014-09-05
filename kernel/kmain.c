@@ -33,8 +33,9 @@ u32int kernelSize = (u32int)&end;
 void read_from_floppy() {
 	kprintf(K_WARN, "Attempt floppy read\n");
 	u8int *sector = 0;
-	sector = flpy_read_sector(0);
+	sector = flpy_read_sector(19);
 
+	kprintf(K_INFO, "Whole sector %s and %d", sector, sector);
 	if (sector != 0) {
 		int i = 0;
 		for (int c = 0; c < 4; c++) {

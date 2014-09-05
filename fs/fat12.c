@@ -7,6 +7,8 @@
 
 #include "drivers/Floppy.h"
 
+#include "mm/physmem.h"
+
 // Bytes per sector
 #define SECTOR_SIZE 512
 
@@ -22,13 +24,13 @@ u8int FAT[SECTOR_SIZE*2];
 void to_dos_file_name(const char *filename, char *fname, u32int FNameLength) {
 	u32int i = 0;
 
-	if (FNameLength > 11)
+	if (FNameLength > 12)
 		return;
 
 	if (!fname || !filename)
 		return;
 
-	memset(fname, ' ', FNameLength);
+	memset(fname, 32, FNameLength);
 
 	// 8.3 filename
 	for (i = 0; i < strlen(filename)-1 && i < FNameLength; i++) {
@@ -42,36 +44,39 @@ void to_dos_file_name(const char *filename, char *fname, u32int FNameLength) {
 	if (filename[i] == '.') {
 		for (int k = 0; k < 3; k++) {
 			i++;
-			if (filename[i])
+			if (filename[i]) {
 				fname[8+k] = toupper(filename[i]);
+			}
 		}
 	}
+
+	fname[10] = ' ';
 }
 
 FILE fsys_fat_directory(const char *directoryName) {
 	FILE file;
-	unsigned char *buf;
-	PDIRECTORY directory;
+   	unsigned char *buf;
+   	PDIRECTORY directory;
 
-	char dosFileName[11];
-	to_dos_file_name(directoryName, dosFileName, 11);
-	dosFileName[11] = 0; // null terminate
+   	char dosFileName[12];
+   	to_dos_file_name(directoryName, dosFileName, 12);
+   	dosFileName[11] = 0; // null terminate
 
-	for (int sector = 0; sector < 14; sector++) {
-		// read sector
-		buf = (unsigned char *)flpy_read_sector(mount_info.rootOffset + sector);
+   	for (int sector = 0; sector < 1; sector++) {
+      	// read sector
+      	buf = (unsigned char *)flpy_read_sector(19 + sector);
 
-		directory = (PDIRECTORY)buf;
+      	directory = (PDIRECTORY)buf;
 
-		// 16 entries per sector
-		for (int i = 0; i < 16; i++) {
-			// get current filename
-			char name[11];
-			memcpy(name, directory->filename, 11);
-			name[11] = 0;
+      	// 16 entries per sector
+      	for (int i = 0; i < 16; i++) {
+         	// get current filename
+         	char name[12];
+         	memcpy(name, directory->filename, 11);
+         	name[11] = 0;
 
-			// does it match?
-			if (!strcmp(dosFileName, name)) {
+         	// does it match?
+         	if (!strcmp(dosFileName, name)) {
 				// found it
 				strcpy(file.name, directoryName);
 				file.id = 0;
@@ -86,12 +91,16 @@ FILE fsys_fat_directory(const char *directoryName) {
 					file.flags = FS_FILE;
 
 				return file;
+			} else {
+				//kprintf(K_ERROR, "strcmp() returned: %d", ret);
 			}
 
 			directory++;
+			//getch();
 		}
 	}
 
+	kprintf(K_ERROR, "Literally could not find file\n");
 	// unable to find file
 	file.flags = FS_INVALID;
 	return file;
@@ -100,7 +109,7 @@ FILE fsys_fat_directory(const char *directoryName) {
 void fsys_fat_read(PFILE file, unsigned char *buffer, u32int length) {
 	if (file) {
 		// starting physical sector
-		u32int physSector = 32 + (file->currentCluster - 1);
+		u32int physSector = 50 + (file->currentCluster - 1);
 
 		unsigned char *sector = (unsigned char *)flpy_read_sector(physSector);
 
@@ -187,6 +196,7 @@ FILE fsys_fat_open_subdir(FILE kFile, const char *filename) {
 }
 
 FILE fsys_fat_open(const char *filename) {
+	//kprintf(K_INFO, "FAT12 open file\n");
 	FILE curDirectory;
 	char *p = 0;
 	u8int rootDir = 0;
@@ -201,11 +211,13 @@ FILE fsys_fat_open(const char *filename) {
 			return curDirectory;
 		}
 
+		kprintf(K_ERROR, "File found was not of type file\n");
 		FILE ret;
 		ret.flags = FS_INVALID;
 		return ret;
 	}
 
+	kprintf(K_ERROR, "File not found from fsys_fat_directory()\n");
 	curDirectory.flags = FS_INVALID;
 	return curDirectory;
 }
@@ -213,6 +225,10 @@ FILE fsys_fat_open(const char *filename) {
 void fsys_fat_mount() {
 	PBOOTSECTOR bootsector;
 	bootsector = (PBOOTSECTOR)flpy_read_sector(0); // read boot sector
+
+	kprintf(K_INFO, "Num FATs in disk %d\n", bootsector->bpb.NumberOfFats);
+	kprintf(K_INFO, "Num sectors per FAT %d\n", bootsector->bpb.SectorsPerFat);
+
 
 	// store mount info
 	mount_info.numSectors 	  = bootsector->bpb.NumSectors;
