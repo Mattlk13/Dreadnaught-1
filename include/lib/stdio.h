@@ -11,7 +11,8 @@ enum info_levels {
 	K_OK 	= 1,
 	K_WARN  = 2,
 	K_INFO  = 3,
-	K_NONE	= 4
+	K_NONE	= 4,
+	K_DEBUG = 5
 };
 
 void kprintf(int level, const char *format, ...);

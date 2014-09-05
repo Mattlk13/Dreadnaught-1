@@ -75,5 +75,6 @@ extern void fsys_fat_read(PFILE file, unsigned char *buffer, u32int length);
 extern FILE fsys_fat_open(const char *fileName);
 extern void fsys_fat_initialize();
 extern void fsys_fat_mount();
+extern void fsys_fat_list();
 
 #endif

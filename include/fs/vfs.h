@@ -23,6 +23,7 @@ typedef struct _FILE_SYSTEM {
 	void (*read)(PFILE file, unsigned char *buffer, u32int length);
 	void (*close)(PFILE);
 	FILE (*open)(const char *fileName);
+	void (*list)();
 } FILESYSTEM, *PFILESYSTEM;
 
 #define FS_FILE 0

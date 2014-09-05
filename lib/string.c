@@ -4,7 +4,9 @@
 #include "lib/stdio.h"
 
 int strcmp(const char *str1, const char *str2) {
-	//kprintf(K_INFO, "Comparing %s and %s\n", str1, str2);
+	//kprintf(K_INFO, "Comparing %d and %d\n", str1[0], str2[0]);
+	//if (!str1[0] || !str2[0])
+	//	for (;;); //WTFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 
 	int i = 0;
 	int ret;
@@ -76,4 +78,13 @@ char toupper(char c) {
 		return 'A' + (c - 'a');
 	else
 		return c;
+}
+
+char *strchr(char *str, int c) {
+	do {
+		if (*str == c)
+			return (char *)str;
+	} while (*str++);
+
+	return 0;
 }

@@ -33,7 +33,7 @@ void to_dos_file_name(const char *filename, char *fname, u32int FNameLength) {
 	memset(fname, 32, FNameLength);
 
 	// 8.3 filename
-	for (i = 0; i < strlen(filename)-1 && i < FNameLength; i++) {
+	for (i = 0; i < strlen(filename) && i < FNameLength; i++) {
 		if (filename[i] == '.' || i == 8)
 			break;
 
@@ -46,11 +46,14 @@ void to_dos_file_name(const char *filename, char *fname, u32int FNameLength) {
 			i++;
 			if (filename[i]) {
 				fname[8+k] = toupper(filename[i]);
+			} else {
+				fname[8+k] = ' ';
 			}
 		}
 	}
-
-	fname[10] = ' ';
+	
+	if (fname[10] < 'A') // sometimes garbage gets up in there
+		fname[10] = ' ';
 }
 
 FILE fsys_fat_directory(const char *directoryName) {
@@ -61,8 +64,9 @@ FILE fsys_fat_directory(const char *directoryName) {
    	char dosFileName[12];
    	to_dos_file_name(directoryName, dosFileName, 12);
    	dosFileName[11] = 0; // null terminate
+   	kprintf(K_DEBUG, "dosFileName: |%s|\n", dosFileName);
 
-   	for (int sector = 0; sector < 1; sector++) {
+   	for (int sector = 0; sector < 14; sector++) {
       	// read sector
       	buf = (unsigned char *)flpy_read_sector(19 + sector);
 
@@ -85,18 +89,16 @@ FILE fsys_fat_directory(const char *directoryName) {
 				file.fileLength = directory->fileSize;
 
 				// set file type
-				if (directory->attrib == 0x10)
+				if (directory->attrib == 0x10) {
 					file.flags = FS_DIRECTORY;
-				else
+					kprintf(K_DEBUG, "Got a dir\n");
+				} else
 					file.flags = FS_FILE;
 
 				return file;
-			} else {
-				//kprintf(K_ERROR, "strcmp() returned: %d", ret);
 			}
 
 			directory++;
-			//getch();
 		}
 	}
 
@@ -156,18 +158,19 @@ FILE fsys_fat_open_subdir(FILE kFile, const char *filename) {
 	FILE file;
 
 	// get 8.3 dir name
-	char dosFileName[11];
-	to_dos_file_name(filename, dosFileName, 11);
+	char dosFileName[12];
+	to_dos_file_name(filename, dosFileName, 12);
 	dosFileName[11] = 0; // null terminate
+	kprintf(K_INFO, "dosFileName: |%s|\n", dosFileName);
 
 	while (!kFile.eof) {
 		unsigned char buf[512];
-		fsys_fat_read(&file, buf, 512);
+		fsys_fat_read(&kFile, buf, 512);
 
 		PDIRECTORY pkDir = (PDIRECTORY)buf;
 
 		for (u32int i = 0; i < 16; i++) {
-			char name[11];
+			char name[12];
 			memcpy(name, pkDir->filename, 11);
 			name[11] = 0;
 
@@ -195,14 +198,18 @@ FILE fsys_fat_open_subdir(FILE kFile, const char *filename) {
 	return file;
 }
 
+void fsys_fat_list() {
+
+}
+
 FILE fsys_fat_open(const char *filename) {
 	//kprintf(K_INFO, "FAT12 open file\n");
 	FILE curDirectory;
 	char *p = 0;
-	u8int rootDir = 0;
+	u8int rootDir = 1;
 	char *path = (char *)filename;
 
-	// TODO: write strchr() to detect char
+	p = strchr(path, '/');
 	if (!p) {
 		curDirectory = fsys_fat_directory(path);
 
@@ -215,6 +222,39 @@ FILE fsys_fat_open(const char *filename) {
 		FILE ret;
 		ret.flags = FS_INVALID;
 		return ret;
+	} else {
+		kprintf(K_INFO, "File is in subdir\n");
+	}
+
+	p = path;
+	while (p) {
+		char pathname[16];
+		int i = 0;
+		for (i = 0; i < 16; i++) {
+			if (p[i] == '/' || p[i] == '\0')
+				break;
+
+			pathname[i] = p[i];
+		}
+		pathname[i] = 0;
+		kprintf(K_INFO, "Pathname is %s\n", pathname);
+
+		if (rootDir) {
+			curDirectory = fsys_fat_directory(pathname);
+			rootDir = 0;
+		} else {
+			curDirectory = fsys_fat_open_subdir(curDirectory, pathname);
+		}
+
+		if (curDirectory.flags == FS_INVALID)
+			break;
+
+		if (curDirectory.flags == FS_FILE)
+			return curDirectory;
+
+		p = strchr(p+1, '/');
+		if (p)
+			p++;
 	}
 
 	kprintf(K_ERROR, "File not found from fsys_fat_directory()\n");

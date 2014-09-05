@@ -31,9 +31,16 @@ char get_line(char *buf) {
 	return 0;
 }
 
+void cmd_help() {
+	kprintf(K_NONE, "Welcome to HeisenbergOS!!\n\n");
+	kprintf(K_NONE, "List of Commands:\n");
+	kprintf(K_NONE, "read\tRead a file from the floppy.\n");
+	kprintf(K_NONE, "help\tShow this message.\n");
+}
+
 void cmd_read_file() {
 	kprintf(K_NONE, "Enter the name of the file to read:\n> ");
-	char buf[11];
+	char buf[101];
 	get_line(buf);
 
 	FILE file = vol_open_file(buf);
@@ -67,7 +74,7 @@ void read_cmd() {
 	get_line(buf);
 
 	if (!strcmp(buf, "help"))
-		kprintf(K_NONE, "Welcome to HeisenbergOS!!\n\nList of Commands:\n...\nhelp?\n\n");
+		cmd_help();
 	else if (!strcmp(buf, "read"))
 		cmd_read_file();
 }

@@ -23,12 +23,18 @@ void set_color_for_level(int level) {
 			mon_set_color(COLOR_BLACK, COLOR_LIGHT_CYAN);
 			mon_write("INFO");
 			break;
+		case K_DEBUG:
+			mon_set_color(COLOR_BLACK, COLOR_MAGENTA);
+			mon_write("DEBUG");
 		default:
 			mon_set_color(COLOR_BLACK, COLOR_WHITE);
 	}
 }
 
 void kprintf(int level, const char *format, ...) {
+	if (level == K_DEBUG && !DEBUG)
+		return;
+
 	if (level != K_NONE) {
 		mon_set_color(COLOR_BLACK, COLOR_WHITE); // print level
 		mon_put('[');
