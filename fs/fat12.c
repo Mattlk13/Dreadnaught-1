@@ -203,7 +203,6 @@ void fsys_fat_list() {
 }
 
 FILE fsys_fat_open(const char *filename) {
-	//kprintf(K_INFO, "FAT12 open file\n");
 	FILE curDirectory;
 	char *p = 0;
 	u8int rootDir = 1;
@@ -222,8 +221,6 @@ FILE fsys_fat_open(const char *filename) {
 		FILE ret;
 		ret.flags = FS_INVALID;
 		return ret;
-	} else {
-		kprintf(K_INFO, "File is in subdir\n");
 	}
 
 	p = path;
@@ -237,7 +234,6 @@ FILE fsys_fat_open(const char *filename) {
 			pathname[i] = p[i];
 		}
 		pathname[i] = 0;
-		kprintf(K_INFO, "Pathname is %s\n", pathname);
 
 		if (rootDir) {
 			curDirectory = fsys_fat_directory(pathname);

@@ -33,23 +33,19 @@ u32int kernelSize = (u32int)&end;
 void read_from_floppy() {
 	kprintf(K_WARN, "Attempt floppy read\n");
 	u8int *sector = 0;
-	sector = flpy_read_sector(19);
+	sector = flpy_read_sector(0);
 
-	kprintf(K_INFO, "Whole sector %s and %d", sector, sector);
-	if (sector != 0) {
-		int i = 0;
-		for (int c = 0; c < 4; c++) {
-			for (int j = 0; j < 128; j++)
-				kprintf(K_NONE, "%x ", sector[i+j]);
-			i += 128;
+	if (flpy_write_sector(1, sector))
+		kprintf(K_OK, "Wrote to floppy\n");
+}
 
-			kprintf(K_NONE, "\n\n");
-			kprintf(K_OK, "Press any key to continue...\n");
-			getch();
-		}
-	} else {
-		kprintf(K_ERROR, "Error reading sector from disk");
-	}
+u8int detect_floppy_drive() {
+	u8int c;
+	outb(0x70, 0x10);
+	c = inb(0x71);
+
+	c >>= 4;
+	return c;
 }
 
 int kmain(multiboot_info_t *bootinfo) {
@@ -75,11 +71,14 @@ int kmain(multiboot_info_t *bootinfo) {
 	kb_install_kb();
 
 	// FLOPPY
-	flpy_set_working_drive(0);
-	flpy_install(38);
-
-	fsys_fat_initialize();
-	kprintf(K_OK, "File system mounted\n");
+	if (detect_floppy_drive()) {
+		kprintf(K_INFO, "Floppy drive detected. Installing FDC.\n");
+		flpy_set_working_drive(0);
+		flpy_install(38);
+		fsys_fat_initialize();
+		kprintf(K_OK, "File system mounted\n");
+	}
+	
 	//read_from_floppy();
 
 	start_cmd_prompt();

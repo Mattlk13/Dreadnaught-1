@@ -15,6 +15,7 @@ u8int flpy_get_working_drive();
 
 // read a sector
 u8int *flpy_read_sector(int sectorLBA);
+u8int flpy_write_sector(int sectorLBA, u8int *data);
 
 // convert LBA to CHS
 void flpy_lba_to_chs(int lba, int *head, int *track, int *sector);

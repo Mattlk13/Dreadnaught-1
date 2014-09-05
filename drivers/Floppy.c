@@ -137,7 +137,7 @@ const int FDC_DMA_CHANNEL = 2;
 static u8int current_drive = 0;
 static volatile u8int _FloppyDiskIRQ = 0;
 
-u8int dma_initialize_floppy(u8int *buffer, unsigned length) {
+u8int dma_initialize_floppy(u8int *buffer, unsigned length, u8int write) {
 	union {
 		u8int byte[4];
 		unsigned long l;
@@ -159,7 +159,10 @@ u8int dma_initialize_floppy(u8int *buffer, unsigned length) {
 	dma_reset_flipflop(1);
 
 	dma_set_count(FDC_DMA_CHANNEL, c.byte[0], c.byte[1]);
-	dma_set_read(FDC_DMA_CHANNEL);
+	if (!write)
+		dma_set_read(FDC_DMA_CHANNEL);
+	else
+		dma_set_write(FDC_DMA_CHANNEL);
 
 	dma_unmask_all(1);
 
@@ -313,14 +316,20 @@ void flpy_reset() {
 	flpy_calibrate(current_drive);
 }
 
-void flpy_read_sector_imp(u8int head, u8int track, u8int sector) {
+void flpy_read_sector_imp(u8int head, u8int track, u8int sector, u8int write) {
 	u32int st0, cyl;
 
-	dma_initialize_floppy((u8int *)DMA_BUFFER, 512);
+	dma_initialize_floppy((u8int *)DMA_BUFFER, 512, write);
 
-	dma_set_read(FDC_DMA_CHANNEL);
+	if (!write)	
+		dma_set_read(FDC_DMA_CHANNEL);
+	else
+		dma_set_write(FDC_DMA_CHANNEL);
 
-	flpy_send_command(FDC_CMD_READ_SECT | FDC_CMD_EXT_MULTITRACK | FDC_CMD_EXT_SKIP | FDC_CMD_EXT_DENSITY);
+	if (!write)
+		flpy_send_command(FDC_CMD_READ_SECT | FDC_CMD_EXT_MULTITRACK | FDC_CMD_EXT_SKIP | FDC_CMD_EXT_DENSITY);
+	else
+		flpy_send_command(FDC_CMD_WRITE_SECT | FDC_CMD_EXT_MULTITRACK | FDC_CMD_EXT_SKIP | FDC_CMD_EXT_DENSITY);
 	flpy_send_command(head << 2 | current_drive);
 	flpy_send_command(track);
 	flpy_send_command(head);
@@ -382,6 +391,25 @@ u8int flpy_get_working_drive() {
 	return current_drive;
 }
 
+u8int flpy_write_sector(int sectorLBA, u8int *data) {
+	if (current_drive >= 4)
+		return 0;
+
+	int head = 0, track = 0, sector = 1;
+	flpy_lba_to_chs(sectorLBA, &head, &track, &sector);
+
+	flpy_control_motor(1);
+	if (flpy_seek((u8int)track, (u8int)head) != 0)
+		return 0;
+
+	memcpy((u8int *)DMA_BUFFER, data, 512);
+
+	flpy_read_sector_imp((u8int)head, (u8int)track, (u8int)sector, 1);
+	flpy_control_motor(0);
+
+	return 1;
+}
+
 u8int *flpy_read_sector(int sectorLBA) {
 	if (current_drive >= 4)
 		return 0;
@@ -393,7 +421,7 @@ u8int *flpy_read_sector(int sectorLBA) {
 	if (flpy_seek((u8int)track, (u8int)head) != 0)
 		return 0;
 
-	flpy_read_sector_imp((u8int)head, (u8int)track, (u8int)sector);
+	flpy_read_sector_imp((u8int)head, (u8int)track, (u8int)sector, 0);
 	flpy_control_motor(0);
 
 	// apparently this is hackish
