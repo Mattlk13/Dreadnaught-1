@@ -33,6 +33,7 @@ typedef struct _FILE_SYSTEM {
 extern FILE vol_open_file(const char *fname);
 extern void vol_read_file(PFILE file, unsigned char *buffer, u32int length);
 extern void vol_close_file(PFILE file);
+extern void vol_list_dir();
 extern void vol_register_file_system(PFILESYSTEM, u32int deviceID);
 extern void vol_unregister_file_system(PFILESYSTEM);
 extern void vol_unregister_file_system_by_id(u32int deviceID);

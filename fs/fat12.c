@@ -199,7 +199,30 @@ FILE fsys_fat_open_subdir(FILE kFile, const char *filename) {
 }
 
 void fsys_fat_list() {
+	FILE file;
+   	unsigned char *buf;
+   	PDIRECTORY directory;
 
+   	for (int sector = 0; sector < 14; sector++) {
+      	// read sector
+      	buf = (unsigned char *)flpy_read_sector(19 + sector);
+
+      	directory = (PDIRECTORY)buf;
+
+      	for (int i = 0; i < 16; i++) {
+         	// get current filename
+         	char name[12];
+         	memcpy(name, directory->filename, 11);
+         	name[11] = 0;
+
+         	if (name[0] == 0 || name[0] == 0xE5)
+         		continue;
+
+         	kprintf(K_NONE, "%s\n", name);
+
+         	directory++;
+        }
+    }
 }
 
 FILE fsys_fat_open(const char *filename) {
@@ -283,6 +306,7 @@ void fsys_fat_initialize() {
 	fSysFat.open = fsys_fat_open;
 	fSysFat.read = fsys_fat_read;
 	fSysFat.close = fsys_fat_close;
+	fSysFat.list = fsys_fat_list;
 
 	vol_register_file_system(&fSysFat, 0);
 

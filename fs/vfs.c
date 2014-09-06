@@ -47,6 +47,10 @@ void vol_close_file(PFILE file) {
 	}
 }
 
+void vol_list_dir() {
+	_File_Systems[0]->list();
+}
+
 void vol_register_file_system(PFILESYSTEM fsys, u32int deviceID) {
 	static int i = 0;
 

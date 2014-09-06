@@ -67,6 +67,10 @@ void cmd_read_file() {
 	kprintf(K_NONE, "\n============= EOF =============\n");
 }
 
+void cmd_ls() {
+	vol_list_dir();
+}
+
 void read_cmd() {
 	kprintf(K_NONE, "root@heisenbergOS$ ");
 
@@ -77,6 +81,8 @@ void read_cmd() {
 		cmd_help();
 	else if (!strcmp(buf, "read"))
 		cmd_read_file();
+	else if (!strcmp(buf, "ls"))
+		cmd_ls();
 }
 
 void start_cmd_prompt() {
