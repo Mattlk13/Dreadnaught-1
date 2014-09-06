@@ -36,6 +36,7 @@ void cmd_help() {
 	kprintf(K_NONE, "List of Commands:\n");
 	kprintf(K_NONE, "read\tRead a file from the floppy.\n");
 	kprintf(K_NONE, "help\tShow this message.\n");
+	kprintf(K_NONE, "ls  \tList files in directory.\n");
 }
 
 void cmd_read_file() {
