@@ -111,7 +111,7 @@ FILE fsys_fat_directory(const char *directoryName) {
 void fsys_fat_read(PFILE file, unsigned char *buffer, u32int length) {
 	if (file) {
 		// starting physical sector
-		u32int physSector = 50 + (file->currentCluster - 1);
+		u32int physSector = 32 + (file->currentCluster - 1);
 
 		unsigned char *sector = (unsigned char *)flpy_read_sector(physSector);
 
