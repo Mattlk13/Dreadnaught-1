@@ -39,12 +39,28 @@ void cmd_help() {
 	kprintf(K_NONE, "ls  \tList files in directory.\n");
 }
 
+void cmd_write_file() {
+	kprintf(K_NONE, "Enter name of file to write: \n> ");
+	char buf[101];
+	get_line(buf);
+
+	FILE file = vol_open_file(buf, F_WRITE);
+
+	if (file.flags == FS_INVALID) {
+		kprintf(K_ERROR, "[CMD] Unable to write file %s\n", buf);
+		return;
+	}
+
+	kprintf(K_OK, "Succesfully wrote file!\n");
+	vol_close_file(&file);
+}
+
 void cmd_read_file() {
 	kprintf(K_NONE, "Enter the name of the file to read:\n> ");
 	char buf[101];
 	get_line(buf);
 
-	FILE file = vol_open_file(buf);
+	FILE file = vol_open_file(buf, F_READ);
 
 	if (file.flags == FS_INVALID) {
 		kprintf(K_ERROR, "Unable to open file %s\n", buf);
@@ -66,6 +82,7 @@ void cmd_read_file() {
 	}
 
 	kprintf(K_NONE, "\n============= EOF =============\n");
+	vol_close_file(&file);
 }
 
 void cmd_ls() {
@@ -82,6 +99,8 @@ void read_cmd() {
 		cmd_help();
 	else if (!strcmp(buf, "read"))
 		cmd_read_file();
+	else if (!strcmp(buf, "write"))
+		cmd_write_file();
 	else if (!strcmp(buf, "ls"))
 		cmd_ls();
 }

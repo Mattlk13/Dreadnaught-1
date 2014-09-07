@@ -16,13 +16,19 @@ typedef struct _FILE {
 	u32int deviceID;
 } FILE, *PFILE;
 
+typedef enum _FLAGS {
+	F_WRITE = 0,
+	F_READ = 1
+} FLAGS;
+
 typedef struct _FILE_SYSTEM {
 	char name[8];
-	FILE (*directory)(const char *directory_name);
+	FILE (*directory)(const char *directory_name, int flags);
 	void (*mount)();
 	void (*read)(PFILE file, unsigned char *buffer, u32int length);
+	void (*write)(PFILE file, unsigned char *buffer, u32int length);
 	void (*close)(PFILE);
-	FILE (*open)(const char *fileName);
+	FILE (*open)(const char *fileName, int flags);
 	void (*list)();
 } FILESYSTEM, *PFILESYSTEM;
 
@@ -30,7 +36,7 @@ typedef struct _FILE_SYSTEM {
 #define FS_DIRECTORY 1
 #define FS_INVALID 2
 
-extern FILE vol_open_file(const char *fname);
+extern FILE vol_open_file(const char *fname, FLAGS flags);
 extern void vol_read_file(PFILE file, unsigned char *buffer, u32int length);
 extern void vol_close_file(PFILE file);
 extern void vol_list_dir();

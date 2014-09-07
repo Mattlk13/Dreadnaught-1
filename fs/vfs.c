@@ -6,7 +6,7 @@
 
 PFILESYSTEM _File_Systems[DEVICE_MAX];
 
-FILE vol_open_file(const char *fname) {
+FILE vol_open_file(const char *fname, FLAGS flags) {
 	if (fname) {
 		// default to device a
 		unsigned char device = 'a';
@@ -20,7 +20,7 @@ FILE vol_open_file(const char *fname) {
 
 		if (_File_Systems[device - 'a']) {
 			// set vol specific info and return file
-			FILE file = _File_Systems[device - 'a']->open(filename);
+			FILE file = _File_Systems[device - 'a']->open(filename, flags);
 			file.deviceID = device;
 			return file;
 		}
@@ -35,6 +35,14 @@ void vol_read_file(PFILE file, unsigned char *buffer, u32int length) {
 	if (file) {
 		if (_File_Systems[file->deviceID - 'a']) {
 			_File_Systems[file->deviceID - 'a']->read(file, buffer, length);
+		}
+	}
+}
+
+void vol_write_file(PFILE file, unsigned char *buffer, u32int length) {
+	if (file) {
+		if (_File_Systems[file->deviceID - 'a']) {
+			_File_Systems[file->deviceID - 'a']->write(file, buffer, length);
 		}
 	}
 }

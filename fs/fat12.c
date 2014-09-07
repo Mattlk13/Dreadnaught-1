@@ -56,7 +56,71 @@ void to_dos_file_name(const char *filename, char *fname, u32int FNameLength) {
 		fname[10] = ' ';
 }
 
-FILE fsys_fat_directory(const char *directoryName) {
+FILE fsys_fat_create_file(const char *directoryName, char *dosFileName) {
+	FILE file;
+	unsigned char *buf;
+	PDIRECTORY directory;
+
+	for (int sector = 0; sector < 14; sector++) {
+		// read sector
+		buf = (unsigned char *)flpy_read_sector(19 + sector);
+
+		directory = (PDIRECTORY)buf;
+
+		for (int i = 0; i < 16; i++) {
+			// get current filename
+			char name[12];
+			memcpy(name, directory->filename, 11);
+			name[11] = 0;
+
+			if (name[0] == 0 || name[0] == 0xE5) {
+				// found a free entry
+				strcpy(directory->filename, name);
+				directory->fileSize = 0;
+
+				// find first cluster
+				u16int curCluster = 0;
+				while (curCluster < 1000) {
+					u32int fatOffset = curCluster + (curCluster / 2);
+					u8int tableEntry = *(u8int *)&FAT[fatOffset];
+
+					if (curCluster & 0x0001)
+						tableEntry >>= 4;
+					else
+						tableEntry &= 0x0FFF;
+
+					if (tableEntry == 0)
+						break;
+
+					curCluster++;
+				}
+
+				directory->firstCluster = curCluster;
+
+				strcpy(file.name, directoryName);
+				file.id = 0;
+				file.currentCluster = curCluster;
+				file.eof = 1;
+				file.fileLength = 0;
+				file.flags = FS_FILE;
+
+				if (flpy_write_sector(sector, buf))
+					kprintf(K_OK, "Wrote file %s\n", directoryName);
+				else
+					kprintf(K_ERROR, "Unable to write file %s\n", directoryName);
+
+				return file;
+			}
+			directory++;
+		}
+	}
+
+	file.flags = FS_INVALID;
+	kprintf(K_ERROR, "Unable to create file %s\n", directoryName);
+	return file;
+}
+
+FILE fsys_fat_directory(const char *directoryName, int flags) {
 	FILE file;
    	unsigned char *buf;
    	PDIRECTORY directory;
@@ -102,9 +166,12 @@ FILE fsys_fat_directory(const char *directoryName) {
 		}
 	}
 
-	kprintf(K_ERROR, "Literally could not find file\n");
 	// unable to find file
-	file.flags = FS_INVALID;
+	if (flags == F_READ)
+		file.flags = FS_INVALID;
+	else
+		return fsys_fat_create_file(directoryName, dosFileName);
+
 	return file;
 }
 
@@ -120,7 +187,7 @@ void fsys_fat_read(PFILE file, unsigned char *buffer, u32int length) {
 
 		u32int FAT_Offset = file->currentCluster + (file->currentCluster / 2);
 		u32int FAT_Sector = 1 + (FAT_Offset / SECTOR_SIZE);
-		u32int entryOffset = FAT_Offset %  SECTOR_SIZE;
+		u32int entryOffset = FAT_Offset % SECTOR_SIZE;
 
 		// read 1st FAT sector
 		sector = (unsigned char *)flpy_read_sector(FAT_Sector);
@@ -147,6 +214,10 @@ void fsys_fat_read(PFILE file, unsigned char *buffer, u32int length) {
 		// set next cluster
 		file->currentCluster = nextCluster;
 	}
+}
+
+void fsys_fat_write(PFILE file, unsigned char *buffer, u32int length) {
+
 }
 
 void fsys_fat_close(PFILE file) {
@@ -218,14 +289,15 @@ void fsys_fat_list() {
          	if (name[0] == 0 || name[0] == 0xE5)
          		continue;
 
-         	kprintf(K_NONE, "%s\n", name);
+         	if (directory->attrib != 0xF)
+         		kprintf(K_NONE, "%s\n", name);
 
          	directory++;
         }
     }
 }
 
-FILE fsys_fat_open(const char *filename) {
+FILE fsys_fat_open(const char *filename, int flags) {
 	FILE curDirectory;
 	char *p = 0;
 	u8int rootDir = 1;
@@ -233,7 +305,7 @@ FILE fsys_fat_open(const char *filename) {
 
 	p = strchr(path, '/');
 	if (!p) {
-		curDirectory = fsys_fat_directory(path);
+		curDirectory = fsys_fat_directory(path, flags);
 
 		if (curDirectory.flags == FS_FILE) {
 			// found it
@@ -259,7 +331,7 @@ FILE fsys_fat_open(const char *filename) {
 		pathname[i] = 0;
 
 		if (rootDir) {
-			curDirectory = fsys_fat_directory(pathname);
+			curDirectory = fsys_fat_directory(pathname, flags);
 			rootDir = 0;
 		} else {
 			curDirectory = fsys_fat_open_subdir(curDirectory, pathname);
@@ -305,6 +377,7 @@ void fsys_fat_initialize() {
 	fSysFat.mount = fsys_fat_mount;
 	fSysFat.open = fsys_fat_open;
 	fSysFat.read = fsys_fat_read;
+	fSysFat.write = fsys_fat_write;
 	fSysFat.close = fsys_fat_close;
 	fSysFat.list = fsys_fat_list;
 

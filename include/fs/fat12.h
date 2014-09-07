@@ -70,9 +70,9 @@ typedef struct _MOUNT_INFO {
 	u32int fatEntrySize;
 } MOUNT_INFO, *PMOUNT_INFO;
 
-extern FILE fsys_fat_directory(const char *directoryName);
+extern FILE fsys_fat_directory(const char *directoryName, int flags);
 extern void fsys_fat_read(PFILE file, unsigned char *buffer, u32int length);
-extern FILE fsys_fat_open(const char *fileName);
+extern FILE fsys_fat_open(const char *fileName, int flags);
 extern void fsys_fat_initialize();
 extern void fsys_fat_mount();
 extern void fsys_fat_list();
