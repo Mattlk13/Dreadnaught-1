@@ -51,7 +51,6 @@ u8int detect_floppy_drive() {
 int kmain(multiboot_info_t *bootinfo) {
 	mon_clear();
 	kprintf(K_OK, "System Booted!\n");
-	kprintf(K_INFO, "\"I am the one who knocks!\"\n");
 
 	init_descriptor_tables();
 	

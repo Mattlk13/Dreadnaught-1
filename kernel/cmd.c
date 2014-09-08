@@ -32,7 +32,7 @@ char get_line(char *buf) {
 }
 
 void cmd_help() {
-	kprintf(K_NONE, "Welcome to HeisenbergOS!!\n\n");
+	kprintf(K_NONE, "Welcome to the Dreadnaught Operating System!!\n\n");
 	kprintf(K_NONE, "List of Commands:\n");
 	kprintf(K_NONE, "read\tRead a file from the floppy.\n");
 	kprintf(K_NONE, "help\tShow this message.\n");
