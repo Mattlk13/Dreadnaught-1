@@ -1,4 +1,4 @@
-Heisenberg
-==========
+Dreadnaught
+===========
 
-Heisenberg Operating System
+The Dreadnaught Kernel and Operating System.
