@@ -245,7 +245,7 @@ void flpy_control_motor(u8int b) {
 		flpy_write_dor(FLPYDSK_DOR_MASK_RESET);
 	}
 
-	sleep(20);
+	sleep(10);
 }
 
 void flpy_drive_data(u8int stepr, u8int loadt, u8int unloadt, u8int dma) {

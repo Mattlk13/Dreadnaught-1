@@ -85,6 +85,39 @@ extern void irq13();
 extern void irq14();
 extern void irq15();
 
+struct tss_entry_struct {
+	u32int prev_tss;
+	u32int esp0;
+	u32int ss0;
+	u32int esp1;
+	u32int ss1;
+	u32int esp2;
+	u32int ss2;
+	u32int cr3;
+	u32int eip;
+	u32int eflags;
+	u32int eax;
+	u32int ecx;
+	u32int edx;
+	u32int ebx;
+	u32int esp;
+	u32int ebp;
+	u32int esi;
+	u32int edi;
+	u32int es;
+	u32int cs;
+	u32int ss;
+	u32int ds;
+	u32int fs;
+	u32int gs;
+	u32int ldt;
+	u16int trap;
+	u16int iomap_base;
+} __attribute__((packed));
+
+typedef struct tss_entry_struct tss_entry_t;
+
 void init_descriptor_tables();
+void switch_to_user_mode();
 
 #endif

@@ -5,6 +5,7 @@
 #include "lib/timer.h"
 #include "lib/bootinfo.h"
 #include "lib/stdio.h"
+#include "lib/syscall.h"
 #include "io/monitor.h"
 
 #include "kernel/descriptor_tables.h"
@@ -81,6 +82,9 @@ int kmain(multiboot_info_t *bootinfo) {
 	//read_from_floppy();
 
 	start_cmd_prompt();
+	//initialize_syscalls();
+	//switch_to_user_mode();
+	//syscall_kprintf(K_OK, "Welcome to User Land!\n");
 
 	return 0xDEADBEEF;
 }
