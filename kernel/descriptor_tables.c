@@ -34,22 +34,23 @@ void switch_to_user_mode() {
 		cli; \
 		mov $0x23, %ax; \
 		mov %ax, %ds; \
-		mov %ax, %ds; \
+		mov %ax, %es; \
 		mov %ax, %fs; \
 		mov %ax, %gs; \
 					  \
-		mov %esp, %eax; \
-		pushl $0x23; \
-		pushl %eax; \
-		pushf; \
-		pop %eax; \
-		or %eax, 0x200; \
+		push $0x23; \
+		push %esp; \
+		pushfl; \
+		push $0x1B; \
+		lea a, %eax; \
 		push %eax; \
-		pushl $0x1B; \
-		push $1f; \
+					\
 		iret; \
-		1: \
+		a: \
+		add 4, %esp; \
 		");
+
+	kprintf(K_OK, "Didn't die in user mode switch!\n");
 }
 
 static void init_gdt() {
