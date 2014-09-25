@@ -6,6 +6,7 @@
 extern void gdt_flush(u32int);
 extern void idt_flush(u32int);
 extern void tss_flush();
+extern void enter_user_mode();
 
 static void init_gdt();
 static void gdt_set_gate(s32int, u32int, u32int, u8int, u8int);
@@ -15,7 +16,7 @@ static void idt_set_gate(u8int, u32int, u16int, u8int);
 
 static void write_tss(s32int, u16int, u32int);
 
-gdt_entry_t gdt_entries[5];
+gdt_entry_t gdt_entries[6];
 gdt_ptr_t	gdt_ptr;
 idt_entry_t idt_entries[256];
 idt_ptr_t	idt_ptr;
@@ -23,6 +24,7 @@ idt_ptr_t	idt_ptr;
 tss_entry_t tss_entry;
 
 void init_descriptor_tables() {
+	
 	kprintf(K_INFO, "Init gdt\n");
 	init_gdt();
 	kprintf(K_INFO, "Init idt\n");
@@ -30,31 +32,31 @@ void init_descriptor_tables() {
 }
 
 void switch_to_user_mode() {
-	asm volatile("	\
-		cli; \
-		mov $0x23, %ax; \
-		mov %ax, %ds; \
-		mov %ax, %es; \
-		mov %ax, %fs; \
-		mov %ax, %gs; \
-					  \
-		push $0x23; \
-		push %esp; \
-		pushfl; \
-		push $0x1B; \
-		lea a, %eax; \
-		push %eax; \
-					\
-		iret; \
-		a: \
-		add 4, %esp; \
-		");
+	asm volatile("  \
+     cli; \
+     mov $0x23, %ax; \
+     mov %ax, %ds; \
+     mov %ax, %es; \
+     mov %ax, %fs; \
+     mov %ax, %gs; \
+                   \
+     mov %esp, %eax; \
+     pushl $0x23; \
+     pushl %eax; \
+     pushf; \
+     pushl $0x1B; \
+     push $1f; \
+     iret; \
+   1: \
+     ");
+
+	//enter_user_mode();
 
 	kprintf(K_OK, "Didn't die in user mode switch!\n");
 }
 
 static void init_gdt() {
-	gdt_ptr.limit = (sizeof(gdt_entry_t) * 5) - 1;
+	gdt_ptr.limit = (sizeof(gdt_entry_t) * 6) - 1;
 	gdt_ptr.base  = (u32int)&gdt_entries;
 
 	gdt_set_gate(0, 0, 0, 0, 0);				// Null segment
@@ -62,10 +64,10 @@ static void init_gdt() {
 	gdt_set_gate(2, 0, 0xFFFFFFFF, 0x92, 0xCF); // Data segment
 	gdt_set_gate(3, 0, 0xFFFFFFFF, 0xFA, 0xCF); // User mode code segment
 	gdt_set_gate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF); // User mode data segment
-	//write_tss(5, 0x10, 0x0);
+	write_tss(5, 0x10, 0x0);
 
 	gdt_flush((u32int)&gdt_ptr);
-	//tss_flush();
+	tss_flush();
 }
 
 static void gdt_set_gate(s32int num, u32int base, u32int limit, u8int access, u8int gran) {

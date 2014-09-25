@@ -16,6 +16,27 @@ gdt_flush:
 .flush:
 	ret
 
+[GLOBAL enter_user_mode]
+
+enter_user_mode:
+	mov ax, 0x23
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+
+	push 0x23
+	push esp
+	pushfd
+	push 0x1B
+	lea eax, [a]
+	push eax
+
+	iretd
+a:
+	add esp, 4
+
+
 [GLOBAL idt_flush]
 
 idt_flush:
