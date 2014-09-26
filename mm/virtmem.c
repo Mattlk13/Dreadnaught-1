@@ -28,6 +28,24 @@ inline pd_entry *virt_pdirectory_lookup_entry(pdirectory *p, virtual_addr addr) 
 	return 0;
 }
 
+inline void virt_ptable_clear(ptable *p) {
+	if (p)
+		memset(p, 0, sizeof(ptable));
+}
+
+inline void virt_pdirectory_clear(pdirectory *dir) {
+	if (dir)
+		memset(dir, 0, sizeof(pdirectory));
+}
+
+inline u32int virt_pdirectory_virt_to_index(virtual_addr addr) {
+	return (addr >= DTABLE_ADDR_SPACE_SIZE) ? 0 : addr/PAGE_SIZE;
+}
+
+inline u32int virt_ptable_virt_to_index(virtual_addr addr) {
+	return (addr >= PTABLE_ADDR_SPACE_SIZE) ? 0 : addr/PAGE_SIZE;
+}
+
 inline u8int virt_switch_pdirectory(pdirectory *dir) {
 	if (!dir)
 		return 0;
@@ -118,52 +136,34 @@ void page_fault(registers_t regs) {
 void virt_init() {
 	ptable *table = (ptable *)mem_alloc_block();
 	if (!table) {
-		kprintf(K_ERROR, " Virtual Mem: Exited early 121\n");
+		kprintf(K_ERROR, "Could not allocate page table\n");
 		return;
 	}
 
-	ptable *table2 = (ptable *)mem_alloc_block();
-	if (!table2) {
-		kprintf(K_ERROR, " Virtual Mem: Exited early 127\n");
-		return;
-	}
+	virt_ptable_clear(table);
 
-	memset(table, 0, sizeof(ptable));
-
-	for (int i = 0, frame = 0x0, virt = 0x00000000; i < 1024; i++, frame += 4096, virt += 4096) {
-		pt_entry page = 0; // create new page
-		pt_entry_add_attrib(&page, PTE_PRESENT);
-		pt_entry_set_frame(&page, frame);
-
-		// add page to table
-		table2->m_entries[PAGE_TABLE_INDEX(virt)] = page;
-	}
-
-	for (int i = 0, frame = 0x100000, virt = 0xC0000000; i < 1024; i++, frame += 4096, virt += 4096) {
+	for (int i = 0, frame = 0; i < 1024; i++, frame += 4096) {
 		pt_entry page = 0;
 		pt_entry_add_attrib(&page, PTE_PRESENT);
+		pt_entry_add_attrib(&page, PTE_USER);
 		pt_entry_set_frame(&page, frame);
 
-		table->m_entries[PAGE_TABLE_INDEX(virt)] = page;
+		table->m_entries[virt_ptable_virt_to_index(frame)] = page;
 	}
 
-	pdirectory *dir = (pdirectory *)mem_alloc_blocks(3); // create dir table
+	pdirectory *dir = (pdirectory *)mem_alloc_blocks(3);
 	if (!dir) {
-		kprintf(K_ERROR, " Virtual Mem: Exited early 152\n");
+		kprintf(K_ERROR, "Could not allocate page directory\n");
 		return;
 	}
 
-	memset(dir, 0, sizeof(pdirectory));
+	virt_pdirectory_clear(dir);
 
-	pd_entry *entry = &dir->m_entries[PAGE_DIRECTORY_INDEX(0xC0000000)];
+	pd_entry *entry = virt_pdirectory_lookup_entry(dir, 0);
 	pd_entry_add_attrib(entry, PDE_PRESENT);
 	pd_entry_add_attrib(entry, PDE_WRITABLE);
+	pd_entry_add_attrib(entry, PDE_USER);
 	pd_entry_set_frame(entry, (physical_addr)table);
-
-	pd_entry *entry2 = &dir->m_entries[PAGE_DIRECTORY_INDEX(0x00000000)];
-	pd_entry_add_attrib(entry2, PDE_PRESENT);
-	pd_entry_add_attrib(entry2, PDE_WRITABLE);
-	pd_entry_set_frame(entry2, (physical_addr)table2);
 
 	cur_pdbr = (physical_addr)&dir->m_entries;
 

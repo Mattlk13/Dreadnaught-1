@@ -31,11 +31,11 @@ enter_user_mode:
 	push 0x1B
 	lea eax, [a]
 	push eax
-
+	
 	iretd
 a:
 	add esp, 4
-
+	
 
 [GLOBAL idt_flush]
 
