@@ -31,7 +31,16 @@ void init_descriptor_tables() {
 	init_idt();
 }
 
+void tss_set_stack(u16int kernelSS, u16int kernelESP) {
+	tss_entry.ss0 = kernelSS;
+	tss_entry.esp0 = kernelESP;
+}
+
 void switch_to_user_mode() {
+	int stack = 0;
+	asm volatile("mov %%esp, %0": "=r"(stack));
+	tss_set_stack(0x10, stack);
+
 	asm volatile("  \
      cli; \
      mov $0x23, %ax; \

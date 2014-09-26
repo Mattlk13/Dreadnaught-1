@@ -100,6 +100,7 @@ void virt_map_page(void *phys, void *virt) {
 
 		pd_entry_add_attrib(entry, PDE_PRESENT);
 		pd_entry_add_attrib(entry, PDE_WRITABLE);
+		pd_entry_add_attrib(entry, PDE_USER);
 		pd_entry_set_frame(entry, (physical_addr)table);
 	}
 
@@ -109,6 +110,7 @@ void virt_map_page(void *phys, void *virt) {
 
 	pt_entry_set_frame(page, (physical_addr)phys);
 	pt_entry_add_attrib(page, PTE_PRESENT);
+	pt_entry_add_attrib(page, PTE_USER);
 
 }
 
@@ -146,6 +148,7 @@ void virt_init() {
 		pt_entry page = 0;
 		pt_entry_add_attrib(&page, PTE_PRESENT);
 		pt_entry_add_attrib(&page, PTE_USER);
+		pt_entry_add_attrib(&page, PTE_WRITABLE);
 		pt_entry_set_frame(&page, frame);
 
 		table->m_entries[virt_ptable_virt_to_index(frame)] = page;

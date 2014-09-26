@@ -20,10 +20,11 @@ DEFN_SYSCALL0(getch, 1);
 DEFN_SYSCALL1(mon_write, 2, const char *);
 
 void initialize_syscalls() {
-	register_interrupt_handler(0x80, &syscall_handler);
+	register_interrupt_handler(0x80, syscall_handler);
 }
 
 void syscall_handler(registers_t regs) {
+	kprintf(K_INFO, "Syscall handler\n");
 	if (regs.eax >= num_syscalls)
 		return;
 
