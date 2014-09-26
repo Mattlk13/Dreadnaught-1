@@ -2,19 +2,22 @@
 
 #include "lib/syscall.h"
 #include "lib/stdio.h"
+#include "io/monitor.h"
 
 #include "kernel/isr.h"
 
 static void syscall_handler(registers_t regs);
 
-static void *syscalls[2] = {
+static void *syscalls[3] = {
 	&kprintf,
-	&getch
+	&getch,
+	&mon_write
 };
-u32int num_syscalls = 2;
+u32int num_syscalls = 3;
 
 DEFN_SYSCALL2(kprintf, 0, int, const char *);
 DEFN_SYSCALL0(getch, 1);
+DEFN_SYSCALL1(mon_write, 2, const char *);
 
 void initialize_syscalls() {
 	register_interrupt_handler(0x80, &syscall_handler);

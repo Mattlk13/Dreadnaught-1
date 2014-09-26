@@ -32,7 +32,7 @@ void init_descriptor_tables() {
 }
 
 void switch_to_user_mode() {
-	/*asm volatile("  \
+	asm volatile("  \
      cli; \
      mov $0x23, %ax; \
      mov %ax, %ds; \
@@ -48,9 +48,9 @@ void switch_to_user_mode() {
      push $1f; \
      iret; \
    1: \
-     ");*/
+     ");
 
-	enter_user_mode();
+	//enter_user_mode();
 
 	//kprintf(K_OK, "Didn't die in user mode switch!\n");
 }

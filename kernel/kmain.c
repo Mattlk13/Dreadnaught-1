@@ -10,6 +10,7 @@
 
 #include "kernel/descriptor_tables.h"
 #include "kernel/cmd.h"
+#include "kernel/Exception.h"
 
 #include "mm/physmem.h"
 #include "mm/virtmem.h"
@@ -54,6 +55,7 @@ int kmain(multiboot_info_t *bootinfo) {
 	kprintf(K_OK, "System Booted!\n");
 
 	init_descriptor_tables();
+	register_exceptions();
 	
 	asm volatile("sti");
 	kprintf(K_OK, "Interrupts Enabled\n");
@@ -83,7 +85,9 @@ int kmain(multiboot_info_t *bootinfo) {
 
 	initialize_syscalls();
 	switch_to_user_mode();
-	syscall_kprintf(K_OK, "Welcome to User Land!\n");
+	//syscall_mon_write("Hello, user land?");
+	//syscall_kprintf(K_OK, "Welcome to User Land!\n");
+	for (;;);
 	//start_cmd_prompt();
 
 	return 0xDEADBEEF;
