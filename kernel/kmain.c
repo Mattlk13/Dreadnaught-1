@@ -84,12 +84,12 @@ int kmain(multiboot_info_t *bootinfo) {
 	//read_from_floppy();
 
 	initialize_syscalls();
-	switch_to_user_mode();
+	//switch_to_user_mode();
 
 	//syscall_mon_write("Hello, user land?");
-	syscall_kprintf(K_OK, "Welcome to User Land!\n");
-	for (;;);
-	//start_cmd_prompt();
+	//syscall_kprintf(K_OK, "Welcome to User Land!\n");
+	//for (;;);
+	start_cmd_prompt();
 
 	return 0xDEADBEEF;
 }

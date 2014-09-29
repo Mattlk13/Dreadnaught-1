@@ -1,11 +1,13 @@
 // cmd.c -- Brad Slayter
 
 #include "kernel/cmd.h"
+#include "kernel/descriptor_tables.h"
 
 #include "mm/physmem.h"
 
 #include "lib/stdio.h"
 #include "lib/string.h"
+#include "lib/syscall.h"
 
 #include "fs/vfs.h"
 
@@ -37,6 +39,7 @@ void cmd_help() {
 	kprintf(K_NONE, "read\tRead a file from the floppy.\n");
 	kprintf(K_NONE, "help\tShow this message.\n");
 	kprintf(K_NONE, "ls  \tList files in directory.\n");
+	kprintf(K_NONE, "user\tEnter user mode\n");
 }
 
 void cmd_write_file() {
@@ -89,8 +92,14 @@ void cmd_ls() {
 	vol_list_dir();
 }
 
+void cmd_user() {
+	switch_to_user_mode();
+	syscall_kprintf(K_NONE, "Welcome, to user mode!\n");
+	for (;;);
+}
+
 void read_cmd() {
-	kprintf(K_NONE, "root@heisenbergOS$ ");
+	kprintf(K_NONE, "root@dreadnaught$ ");
 
 	char buf[100];
 	get_line(buf);
@@ -103,6 +112,8 @@ void read_cmd() {
 		cmd_write_file();
 	else if (!strcmp(buf, "ls"))
 		cmd_ls();
+	else if (!strcmp(buf, "user"))
+		cmd_user();
 }
 
 void start_cmd_prompt() {
