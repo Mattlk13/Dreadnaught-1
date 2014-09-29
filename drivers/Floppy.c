@@ -205,7 +205,7 @@ void flpy_wait_irq() {
 	_FloppyDiskIRQ = 0;
 }
 
-void i86_flpy_irq(registers_t regs) {
+void i86_flpy_irq(registers_t *regs) {
 	_FloppyDiskIRQ = 1;
 }
 

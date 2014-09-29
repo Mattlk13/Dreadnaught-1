@@ -85,9 +85,9 @@ int kmain(multiboot_info_t *bootinfo) {
 
 	initialize_syscalls();
 	switch_to_user_mode();
-	asm volatile("int $0x80");
+
 	//syscall_mon_write("Hello, user land?");
-	//syscall_kprintf(K_OK, "Welcome to User Land!\n");
+	syscall_kprintf(K_OK, "Welcome to User Land!\n");
 	for (;;);
 	//start_cmd_prompt();
 

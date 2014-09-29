@@ -6,7 +6,7 @@
 
 #include "kernel/isr.h"
 
-static void syscall_handler(registers_t regs);
+//static void syscall_handler(registers_t *regs);
 
 static void *syscalls[3] = {
 	&kprintf,
@@ -19,16 +19,11 @@ DEFN_SYSCALL2(kprintf, 0, int, const char *);
 DEFN_SYSCALL0(getch, 1);
 DEFN_SYSCALL1(mon_write, 2, const char *);
 
-void initialize_syscalls() {
-	register_interrupt_handler(0x80, syscall_handler);
-}
-
-void syscall_handler(registers_t regs) {
-	//kprintf(K_INFO, "Syscall handler\n");
-	if (regs.eax >= num_syscalls)
+static void syscall_handler(registers_t *regs) {
+	if (regs->eax >= num_syscalls)
 		return;
 
-	void *location = syscalls[regs.eax];
+	void *location = syscalls[regs->eax];
 
 	int ret;
 	asm volatile(" \
@@ -43,6 +38,10 @@ void syscall_handler(registers_t regs) {
 		pop %%ebx; \
 		pop %%ebx; \
 		pop %%ebx; \
-		" : "=a" (ret) : "r" (regs.edi), "r" (regs.esi), "r" (regs.edx), "r" (regs.ecx), "r" (regs.ebx), "r" (location));
-	regs.eax = ret;
+		" : "=a" (ret) : "r" (regs->edi), "r" (regs->esi), "r" (regs->edx), "r" (regs->ecx), "r" (regs->ebx), "r" (location));
+	regs->eax = ret;
+}
+
+void initialize_syscalls() {
+	register_interrupt_handler(0x80, &syscall_handler);
 }

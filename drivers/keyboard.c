@@ -206,7 +206,7 @@ void kb_enc_send_cmd(u8int cmd) {
 	outb(KB_CTRL_CMD_REG, cmd);
 }
 
-void kb_handler(registers_t regs) {
+void kb_handler(registers_t *regs) {
 	//kprintf(K_INFO, "THE HANDLER IS DOIN ITS SHIT");
 
 	static u8int extended = 0;
