@@ -49,6 +49,7 @@ ISR_NOERRCODE 28
 ISR_NOERRCODE 29
 ISR_NOERRCODE 30
 ISR_NOERRCODE 31
+ISR_NOERRCODE 128
 
 [EXTERN isr_handler]
 
@@ -66,7 +67,7 @@ isr_common_stub:
 
 	call isr_handler
 
-	pop eax
+	pop ebx
 	mov ds, ax
 	mov es, ax
 	mov fs, ax

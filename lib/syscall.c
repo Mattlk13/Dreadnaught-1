@@ -24,7 +24,7 @@ void initialize_syscalls() {
 }
 
 void syscall_handler(registers_t regs) {
-	kprintf(K_INFO, "Syscall handler\n");
+	//kprintf(K_INFO, "Syscall handler\n");
 	if (regs.eax >= num_syscalls)
 		return;
 

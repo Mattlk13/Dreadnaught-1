@@ -3,6 +3,8 @@
 #include "kernel/Exception.h"
 #include "kernel/isr.h"
 
+#include "lib/stdio.h"
+
 void div_by_zero(registers_t regs) {
 	PANIC("Divide By Zero");
 }
@@ -28,6 +30,9 @@ void bounds_check_fault(registers_t regs) {
 }
 
 void invalid_opcode_fault(registers_t regs) {
+	kprintf(K_ERROR, "Invalid opcode.\n");
+	kprintf(K_NONE, "\t\teip: %x, error code: %x\n", regs.eip, regs.err_code);
+
 	PANIC("Invalid Opcode Fault");
 }
 

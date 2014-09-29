@@ -57,6 +57,7 @@ void switch_to_user_mode() {
      push $1f; \
      iret; \
    1: \
+   	 add %esp, 8; \
      ");
 
 	//enter_user_mode();
@@ -174,6 +175,7 @@ static void init_idt() {
 	idt_set_gate(45, (u32int)irq13, 0x08, 0x8E);
 	idt_set_gate(46, (u32int)irq14, 0x08, 0x8E);
 	idt_set_gate(47, (u32int)irq15, 0x08, 0x8E);
+	idt_set_gate(128, (u32int)isr128, 0x08, 0x8E);
 
 	idt_flush((u32int)&idt_ptr);
 }
@@ -185,6 +187,6 @@ static void idt_set_gate(u8int num, u32int base, u16int sel, u8int flags) {
 	idt_entries[num].sel	   = sel;
 	idt_entries[num].always0   = 0;
 
-	idt_entries[num].flags	   = flags /*| 0x60*/;
+	idt_entries[num].flags	   = flags | 0x60;
 }
 
