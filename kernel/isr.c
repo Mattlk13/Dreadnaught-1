@@ -8,7 +8,7 @@
 isr_t interrupt_handlers[256];
 
 void register_interrupt_handler(u8int n, isr_t handler) {
-	kprintf(K_OK, "Interrupt %d registered at %x\n", n, handler);
+	kprintf(K_OK, "Interrupt %d registered\n", n);
 	interrupt_handlers[n] = handler;
 }
 

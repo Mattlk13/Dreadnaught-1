@@ -17,6 +17,7 @@
 
 #include "drivers/keyboard.h"
 #include "drivers/Floppy.h"
+#include "drivers/ide.h"
 
 #include "fs/fat12.h"
 
@@ -81,6 +82,8 @@ int kmain(multiboot_info_t *bootinfo) {
 		kprintf(K_OK, "File system mounted\n");
 	}
 	
+	ide_install();
+
 	//read_from_floppy();
 
 	initialize_syscalls();
