@@ -82,7 +82,7 @@ int kmain(multiboot_info_t *bootinfo) {
 		kprintf(K_OK, "File system mounted\n");
 	}
 	
-	ide_install();
+	//ide_install();
 
 	//read_from_floppy();
 
