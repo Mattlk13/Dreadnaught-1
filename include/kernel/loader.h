@@ -4,6 +4,7 @@
 #define LOADER_H
 
 #include "lib/common.h"
+#include "mm/virtmem.h"
 
 /* Most of this is from the ELF standard. Some parts
 	may have been taken from toaruos. Thank you klange! */
@@ -93,5 +94,61 @@ typedef struct {
 #define SHT_SVMTAB	 2
 #define SHT_STRTAB	 3
 #define SHT_NOBITS	 8
+
+//////////////////////////////////////
+//			Process Info 			//
+//////////////////////////////////////
+
+/*
+	0x00000000 - 0x00400000 = Kernel Lower
+	0x00400000 - 0x80000000 = User Land
+	0x80000000 - 0xFFFFFFFF = Kernel Higher
+*/
+
+
+#define KE_USER_START   0x00400000
+#define KE_KERNEL_START 0x80000000
+
+#define PROCESS_STATE_SLEEP  0
+#define PROCESS_STATE_ACTIVE 1
+
+#define MAX_THREAD 5
+
+typedef struct _trapFrame {
+	u32int esp;
+	u32int ebp;
+	u32int eip;
+	u32int edi;
+	u32int esi;
+	u32int eax;
+	u32int ebx;
+	u32int ecx;
+	u32int edx;
+	u32int flags;
+} trapFrame;
+
+struct _process;
+typedef struct _thread {
+	process  *parent;
+	void	 *initialStack;
+	void	 *stackLimit;
+	void	 *kernelStack;
+	u32int	  priority;
+	int 	  state;
+	trapFrame frame;
+} thread;
+
+typedef struct _process {
+	int 		id;
+	int 		priority;
+	pdirectory *pageDirectory;
+	int 		state;
+	//typedef struct _process *next;
+	thread threads[MAX_THREAD];
+}  process;
+
+// Process execution functions
+int exec(char *path, int argc, char **argv, char **env);
+int system(char *path, int argc, char **argv);
 
 #endif

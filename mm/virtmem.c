@@ -114,15 +114,76 @@ void virt_map_page(void *phys, void *virt) {
 
 }
 
-void page_fault(registers_t regs) {
+int virt_create_page_table(pdirectory *dir, u32int virt, u32int flags) {
+	pd_entry *pagedir = dir->m_entries;
+	if (pagedir[virt >> 22] == 0) {
+		void *block = mem_alloc_block();
+		if (!block)
+			return 0; // out of memory
+
+		pagedir[virt >> 22] = ((u32int)block) | flags;
+		memset((u32int *)pagedir[virt >> 22], 0, 4096); // clearing the table
+
+		virt_map_phys_addr(dir, (u32int)block, (u32int)block, flags);
+	}
+
+	return 1; // success
+}
+
+void virt_map_phys_addr(pdirectory *dir, u32int virt, u32int phys, u32int flags) {
+	pd_entry *pagedir = dir->m_entries;
+	if (pagedir[virt >> 22] == 0)
+		virt_create_page_table(dir, virt, flags);
+	((u32int *)(pagedir[virt >> 22] & ~0xFFF))[virt << 10 >> 10 >> 12] = phys | flags;
+}
+
+void virt_unmap_page_table(pdirectory *dir, u32int virt) {
+	pd_entry *pagedir = dir->m_entries;
+	if (pagedir[virt >> 22] != 0) {
+		// get mapped frame
+		void *frame = (void *)(pagedir[virt >> 22] & 0x7FFFF000);
+
+		// unmap frame
+		mem_free_block(frame);
+		pagedir[virt >> 22] = 0;
+	}
+}
+
+void virt_unmap_phys_addr(pdirectory *dir, u32int virt) {
+	pd_entry *pagedir = dir->m_entries;
+	if (pagedir[virt >> 22] != 0)
+		virt_unmap_page_table(dir, virt);
+}
+
+void *virt_get_phys_addr(pdirectory *dir, u32int virt) {
+	pd_entry *pagedir = dir->m_entries;
+	if (pagedir[virt >> 22] == 0)
+		return 0;
+	return (void *)((u32int *)(pagedir[virt >> 22] & ~0xFFF))[virt << 10 >> 10 >> 12];
+}
+
+pdirectory *virt_create_addr_space() {
+	pdirectory *dir = 0;
+
+	// allocate dir
+	dir = (pdirectory *)mem_alloc_block();
+	if (!dir)
+		return 0; // :(
+
+	// clear dir (mark all tables as not present)
+	memset(dir, 0, sizeof(pdirectory));
+	return dir;
+}
+
+void page_fault(registers_t *regs) {
 	u32int fault_addr;
 	asm("mov %%cr2, %0" : "=r"(fault_addr));
 
-	int present  = !(regs.err_code & 0x1);
-	int rw 		 = regs.err_code & 0x2;
-	int us 		 = regs.err_code & 0x4;
-	int reserved = regs.err_code & 0x8;
-	int id 		 = regs.err_code & 0x10;
+	int present  = !(regs->err_code & 0x1);
+	int rw 		 = regs->err_code & 0x2;
+	int us 		 = regs->err_code & 0x4;
+	int reserved = regs->err_code & 0x8;
+	int id 		 = regs->err_code & 0x10;
 
 	kprintf(K_ERROR, "Page Fault! ( ");
 	if (present) {mon_write("present ");}

@@ -43,4 +43,12 @@ u32int virt_pdirectory_virt_to_index(virtual_addr addr);
 void virt_pdirectory_clear(pdirectory *dir);
 pd_entry *virt_pdirectory_lookup_entry(pdirectory *p, virtual_addr addr); 
 
+// Additions for loader
+int virt_create_page_table(pdirectory *dir, u32int virt, u32int flags);
+void virt_map_phys_addr(pdirectory *dir, u32int virt, u32int phys, u32int flags);
+void virt_unmap_page_table(pdirectory *dir, u32int virt);
+void virt_unmap_phys_addr(pdirectory *dir, u32int virt);
+pdirectory *virt_create_addr_space();
+void *virt_get_phys_addr(pdirectory *dir, u32int virt);
+
 #endif
