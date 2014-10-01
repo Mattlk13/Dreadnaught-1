@@ -114,6 +114,17 @@ typedef struct {
 
 #define MAX_THREAD 5
 
+typedef struct _image {
+	size_t size;			// image size
+	uintptr_t entry;		// entry point
+	uintptr_t heap;			// heap pointer
+	uintptr_t heap_actual;	// actual heap location
+	uintptr_t stack;		// proc kernel stack
+	uintptr_t user_stack;	// user stack
+	uintptr_t start;
+	uintptr_t shm_heap;
+} image_t;
+
 typedef struct _trapFrame {
 	u32int esp;
 	u32int ebp;
@@ -145,6 +156,7 @@ typedef struct _process {
 	int 		state;
 	//typedef struct _process *next;
 	thread threads[MAX_THREAD];
+	image_t image;
 }  process;
 
 // Process execution functions

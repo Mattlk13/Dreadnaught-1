@@ -77,6 +77,25 @@ u8int virt_alloc_page(pt_entry *e) {
 	return 1;
 }
 
+/*pt_entry *virt_get_page(u32int addr, int make, pdirectory *dir) {
+	addr /= 0x1000; // = 4096 bytes
+	u32int idx = addr / 1024;
+	if (dir->m_entries[idx]) {
+		pd_entry *table = &dir->m_entries[idx];
+		return &table->m_entries[addr % 1024];
+	} else if (make) {
+		dir->m_entries[idx] = (pd_entry *)mem_alloc_block();
+		memset(dir->m_entries[idx], 0, sizeof(pd_entry));
+		pd_entry_add_attrib(dir->m_entries[idx], PDE_PRESENT);
+		pd_entry_add_attrib(dir->m_entries[idx], PDE_WRITABLE);
+		pd_entry_add_attrib(dir->m_entries[idx], PDE_USER);
+		pd_entry *table = &dir->m_entries[idx];
+		return &table->m_entries[addr % 1024];
+	} else {
+		return 0;
+	}
+}*/
+
 void virt_free_page(pt_entry *e) {
 	void *p = (void *)pt_entry_pfn(*e);
 	if (p)
