@@ -18,6 +18,7 @@ Todos:
 - [ ] User mode/non page restricted malloc()
 - [ ] IDE (ATA) driver
 - [ ] FAT32 File System
+- [ ] Install OS to disk
 - [ ] User Land shell
 - [ ] Text Editor
 - [ ] GCC port
