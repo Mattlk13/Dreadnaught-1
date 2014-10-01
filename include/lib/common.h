@@ -14,6 +14,7 @@ typedef unsigned char  u8int;
 typedef			 char  s8int;
 
 typedef long unsigned int size_t;
+typedef unsigned long uintptr_t; // big enough to hold a void ptr
 
 // Hardware speaking functions
 void outb(u16int port, u8int value);

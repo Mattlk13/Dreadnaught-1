@@ -85,7 +85,7 @@ typedef struct {
 
 typedef struct {
 	u32int id;
-	u32int ptr; // was a uintptr_t
+	uintptr_t ptr;
 } Elf32_auxv;
 
 #define SHT_NONE 	 0
