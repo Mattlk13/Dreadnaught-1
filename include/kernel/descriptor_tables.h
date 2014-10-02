@@ -120,5 +120,6 @@ typedef struct tss_entry_struct tss_entry_t;
 
 void init_descriptor_tables();
 void switch_to_user_mode();
+void tss_set_stack(u16int kernelSS, u16int kernelESP);
 
 #endif

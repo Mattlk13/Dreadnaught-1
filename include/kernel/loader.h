@@ -25,20 +25,20 @@ typedef u32int Elf32_Half;
 
 // ELF Header
 typedef struct {
-	u8int 		e_ident[EI_NIDENT];
-	Elf32_Half  e_type;
-	Elf32_Half	e_machine;
-	Elf32_Word 	e_version;
-	Elf32_Addr	e_entry;
-	Elf32_Off	e_phoff;
-	Elf32_Off	e_shoff;
-	Elf32_Word 	e_flags;
-	Elf32_Half	e_ehsize;
-	Elf32_Half	e_phentsize;
-	Elf32_Half	e_phnum;
-	Elf32_Half	e_shentsize;
-	Elf32_Half	e_shnum;
-	Elf32_Half	e_shstrndx;
+	unsigned char e_ident[EI_NIDENT];
+	Elf32_Half    e_type;
+	Elf32_Half	  e_machine;
+	Elf32_Word 	  e_version;
+	Elf32_Addr	  e_entry;
+	Elf32_Off	  e_phoff;
+	Elf32_Off	  e_shoff;
+	Elf32_Word 	  e_flags;
+	Elf32_Half	  e_ehsize;
+	Elf32_Half	  e_phentsize;
+	Elf32_Half	  e_phnum;
+	Elf32_Half	  e_shentsize;
+	Elf32_Half	  e_shnum;
+	Elf32_Half	  e_shstrndx;
 } Elf32_Header;
 
 // e_type
@@ -165,5 +165,6 @@ typedef struct _process {
 // Process execution functions
 int exec(char *path, int argc, char **argv, char **env);
 int system(char *path, int argc, char **argv);
+void terminateProcess();
 
 #endif

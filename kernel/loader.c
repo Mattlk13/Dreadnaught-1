@@ -1,6 +1,7 @@
 // loader.c -- Brad Slayter
 
 #include "kernel/loader.h"
+#include "kernel/descriptor_tables.h"
 #include "fs/vfs.h"
 #include "mm/physmem.h"
 #include "lib/stdio.h"
@@ -24,7 +25,7 @@ int exec(char *path, int argc, char **argv, char **env) {
 	process *proc;
 	thread *mainThread;
 	unsigned char *memory;
-	unsigned char buf[512];
+	unsigned char buf[4096];
 
 	if (exe.flags == FS_INVALID)
 		return PROCESS_INVALID_ID;
@@ -33,15 +34,16 @@ int exec(char *path, int argc, char **argv, char **env) {
 	Elf32_Header *header = (Elf32_Header *)mem_alloc_block();
 	for (int i = 0; i < 8; i++) {
 		if (exe.eof != 1)
-			vol_read_file(&exe, (unsigned char *)header, 512);
+			vol_read_file(&exe, (unsigned char *)header+512*i, 512);
 		else
 			break;
 	}
 	header = (Elf32_Header *)header;
+	kprintf(K_INFO, "Header: %s\n", header->e_ident);
 
 	if (header->e_ident[0] != ELFMAG0 || header->e_ident[1] != ELFMAG1 ||
 		header->e_ident[2] != ELFMAG2 || header-> e_ident[3] != ELFMAG3) {
-		kprintf(K_ERROR, "Not a valid ELF image.");
+		kprintf(K_ERROR, "Not a valid ELF image.\n");
 
 		mem_free_block(header);
 		vol_close_file(&exe);
@@ -51,6 +53,7 @@ int exec(char *path, int argc, char **argv, char **env) {
 	// get address space
 	address_space = virt_get_directory();
 
+	kprintf(K_DEBUG, "Setup process\n");
 	// setup process
 	proc = get_current_process();
 	proc->id = 1;
@@ -59,8 +62,8 @@ int exec(char *path, int argc, char **argv, char **env) {
 	proc->state = PROCESS_STATE_ACTIVE;
 	proc->threadCount = 1;
 
+	kprintf(K_DEBUG, "Load segments\n");
 	// load loadable segments
-	proc = get_current_process();
 	for (uintptr_t x = 0; x < (u32int)header->e_shentsize * header->e_shnum; x += header->e_shentsize) {
 		Elf32_Shdr *shdr = (Elf32_Shdr *)((uintptr_t)header + (header->e_shoff + x));
 		if (shdr->sh_addr) {
@@ -88,6 +91,7 @@ int exec(char *path, int argc, char **argv, char **env) {
 		}
 	}
 
+	kprintf(K_DEBUG, "Setup thread\n");
 	mainThread = &proc->threads[0];
 	mainThread->kernelStack = 0;
 	mainThread->parent = proc;
@@ -107,11 +111,14 @@ int exec(char *path, int argc, char **argv, char **env) {
 	memset(memory, 0, 4096);
 	memcpy(memory, header, 4096);
 
+	kprintf(K_DEBUG, "Map header to %x as %x\n", (u32int)memory, mainThread->imageBase);
 	virt_map_phys_addr(proc->pageDirectory, mainThread->imageBase, (u32int)memory,
 		PTE_PRESENT|PTE_WRITABLE|PTE_USER);
 
+	kprintf(K_DEBUG, "Load rest of image\n");
 	int i = 1;
 	while (exe.eof != 1) {
+		kprintf(K_DEBUG, "Load a page.\n");
 		unsigned char *cur = mem_alloc_block();
 		int curBlock = 0;
 		for (curBlock = 0; curBlock < 8; curBlock++) {
@@ -123,24 +130,39 @@ int exec(char *path, int argc, char **argv, char **env) {
 
 		virt_map_phys_addr(proc->pageDirectory, mainThread->imageBase+i*4096,
 			(u32int)cur, PTE_PRESENT|PTE_WRITABLE|PTE_USER);
+		break;
+		i++;
 	}
 
+	kprintf(K_DEBUG, "Setup stack\n");
 	void *stack = (void *)(mainThread->imageBase+mainThread->imageSize+PAGE_SIZE);
 	void *stackPhys = (void *)mem_alloc_block();
 
+	kprintf(K_DEBUG, "Map stack\n");
 	// map user stack
 	virt_map_phys_addr(address_space, (u32int)stack, (u32int)stackPhys,
 		PTE_PRESENT|PTE_WRITABLE|PTE_USER);
 
+	kprintf(K_DEBUG, "More Debug stuff\n");
 	mainThread->initialStack = stack;
 	mainThread->frame.esp = (u32int)mainThread->initialStack;
 	mainThread->frame.ebp = mainThread->frame.ebp;
 
+	kprintf(K_DEBUG, "Close file\n");
 	vol_close_file(&exe);
 
 	asm volatile("cli");
-	mem_load_PDBR((physical_addr)proc->pageDirectory);
+	//mem_load_PDBR((physical_addr)proc->pageDirectory);
 
+	kprintf(K_DEBUG, "Setting TSS stack\n");
+	int kstack = 0;
+	asm volatile("mov %%esp, %0": "=r"(kstack));
+	tss_set_stack(0x10, (u32int)stackPhys);
+
+	kprintf(K_INFO, "Dumping some info:\n\tentry: %x stack: %x\n",
+		entry, mainThread->frame.esp);
+
+	kprintf(K_DEBUG, "MAKE THE JUMP!\n");
 	asm volatile(" \
 		mov $0x23, %%ax; \
 		mov %%ax, %%ds; \
@@ -148,12 +170,57 @@ int exec(char *path, int argc, char **argv, char **env) {
 		mov %%ax, %%fs; \
 		mov %%ax, %%gs; \
 		pushl $0x23; \
-		pushl %0; \
+		push %0; \
 		pushl $0x200; \
 		pushl $0x1B; \
-		pushl %1; \
+		push %1; \
 		iret; \
-		":: "g" (mainThread->frame.esp), "g" (mainThread->frame.eip));
+		":: "r" (mainThread->frame.esp), "r" (entry));
+	kprintf(K_ERROR, "How did we get here...\n");
 
 	return -1; // we should never get here
+}
+
+void terminateProcess() {
+	process *cur = &_proc;
+	if (cur->id == PROCESS_INVALID_ID)
+		return; // someone dun goofed
+
+	// release threads
+	int i = 0;
+	thread *pthread = &cur->threads[i];
+
+	// get phys addr of stack
+	void *stackFrame = virt_get_phys_addr(cur->pageDirectory, 
+		(u32int)pthread->initialStack);
+
+	// unmap and release
+	virt_unmap_phys_addr(cur->pageDirectory, (u32int)pthread->initialStack);
+	mem_free_block(stackFrame);
+
+	// release rest of image
+	for (u32int page = 0; page < pthread->imageSize/PAGE_SIZE; page++) {
+		u32int phys = 0;
+		u32int virt = 0;
+
+		virt = pthread->imageBase + (page * PAGE_SIZE);
+
+		phys = (u32int)virt_get_phys_addr(cur->pageDirectory, virt);
+
+		virt_unmap_phys_addr(cur->pageDirectory, virt);
+		mem_free_block((void *)phys);
+	}
+
+	asm volatile(" \
+		cli; \
+		mov $0x10, %eax; \
+		mov %ax, %ds; \
+		mov %ax, %es; \
+		mov %ax, %fs; \
+		mov %ax, %gs; \
+		sti; \
+		");
+
+	kprintf(K_OK, "Process done. Halting becuase I don't know what to do\n\twith my life\n");
+	for (;;);
 }

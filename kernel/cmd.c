@@ -11,6 +11,8 @@
 
 #include "fs/vfs.h"
 
+#include "kernel/loader.h"
+
 u8int should_exit = 0;
 
 char get_line(char *buf) {
@@ -98,6 +100,14 @@ void cmd_user() {
 	for (;;);
 }
 
+void cmd_run() {
+	kprintf(K_NONE, "Enter the name of the file to run:\n> ");
+	char buf[101];
+	get_line(buf);
+
+	exec(buf, 0, 0, 0);
+}
+
 void read_cmd() {
 	kprintf(K_NONE, "root@dreadnaught$ ");
 
@@ -114,6 +124,8 @@ void read_cmd() {
 		cmd_ls();
 	else if (!strcmp(buf, "user"))
 		cmd_user();
+	else if (!strcmp(buf, "run"))
+		cmd_run();
 }
 
 void start_cmd_prompt() {

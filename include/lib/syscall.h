@@ -57,6 +57,7 @@ int syscall_##fn(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5) {\
 DECL_SYSCALL2(kprintf, int, const char *)
 DECL_SYSCALL0(getch)
 DECL_SYSCALL1(mon_write, const char *)
+DECL_SYSCALL0(terminateProcess)
 
 void initialize_syscalls();
 
