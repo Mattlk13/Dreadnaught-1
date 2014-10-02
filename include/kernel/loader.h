@@ -140,13 +140,15 @@ typedef struct _trapFrame {
 
 struct _process;
 typedef struct _thread {
-	process  *parent;
+	struct _process *parent;
 	void	 *initialStack;
 	void	 *stackLimit;
 	void	 *kernelStack;
 	u32int	  priority;
 	int 	  state;
 	trapFrame frame;
+	u32int imageBase;
+	u32int imageSize;
 } thread;
 
 typedef struct _process {
@@ -156,6 +158,7 @@ typedef struct _process {
 	int 		state;
 	//typedef struct _process *next;
 	thread threads[MAX_THREAD];
+	int threadCount;
 	image_t image;
 }  process;
 

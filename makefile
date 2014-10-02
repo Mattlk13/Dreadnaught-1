@@ -1,7 +1,8 @@
 SOURCES := kernel/boot.o kernel/kmain.o io/monitor.o lib/common.o lib/string.o kernel/gdt.o \
 kernel/descriptor_tables.o kernel/interrupt.o kernel/isr.o lib/timer.o lib/stdio.o\
 mm/physmem.o mm/pte.o mm/pde.o mm/virtmem.o drivers/keyboard.o kernel/cmd.o fs/vfs.o\
-kernel/dma.o drivers/Floppy.o fs/fat12.o lib/syscall.o kernel/Exception.o drivers/ide.o
+kernel/dma.o drivers/Floppy.o fs/fat12.o lib/syscall.o kernel/Exception.o drivers/ide.o\
+kernel/loader.o
 
 INC=-Iinclude
 
