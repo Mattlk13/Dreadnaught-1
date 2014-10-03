@@ -21,7 +21,7 @@ typedef u32int Elf32_Word;
 typedef u32int Elf32_Addr;
 typedef u32int Elf32_Off;
 typedef u32int Elf32_Sword;
-typedef u32int Elf32_Half;
+typedef u16int Elf32_Half;
 
 // ELF Header
 typedef struct {

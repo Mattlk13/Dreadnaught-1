@@ -2,6 +2,7 @@
 
 #include "kernel/cmd.h"
 #include "kernel/descriptor_tables.h"
+#include "kernel/loader.h"
 
 #include "mm/physmem.h"
 
@@ -11,7 +12,8 @@
 
 #include "fs/vfs.h"
 
-#include "kernel/loader.h"
+#include "io/monitor.h"
+
 
 u8int should_exit = 0;
 
@@ -42,6 +44,7 @@ void cmd_help() {
 	kprintf(K_NONE, "help\tShow this message.\n");
 	kprintf(K_NONE, "ls  \tList files in directory.\n");
 	kprintf(K_NONE, "user\tEnter user mode\n");
+	kprintf(K_NONE, "clr \tClear the screen\n");
 }
 
 void cmd_write_file() {
@@ -108,6 +111,10 @@ void cmd_run() {
 	exec(buf, 0, 0, 0);
 }
 
+void cmd_clr_scr() {
+	mon_clear();
+}
+
 void read_cmd() {
 	kprintf(K_NONE, "root@dreadnaught$ ");
 
@@ -126,6 +133,8 @@ void read_cmd() {
 		cmd_user();
 	else if (!strcmp(buf, "run"))
 		cmd_run();
+	else if (!strcmp(buf, "clr"))
+		cmd_clr_scr();
 }
 
 void start_cmd_prompt() {
