@@ -134,6 +134,7 @@ void virt_map_page(void *phys, void *virt) {
 }
 
 int virt_create_page_table(pdirectory *dir, u32int virt, u32int flags) {
+	kprintf(K_INFO, "Creating table\n");
 	pd_entry *pagedir = dir->m_entries;
 	if (pagedir[virt >> 22] == 0) {
 		void *block = mem_alloc_block();
@@ -154,6 +155,8 @@ void virt_map_phys_addr(pdirectory *dir, u32int virt, u32int phys, u32int flags)
 	if (pagedir[virt >> 22] == 0)
 		virt_create_page_table(dir, virt, flags);
 	((u32int *)(pagedir[virt >> 22] & ~0xFFF))[virt << 10 >> 10 >> 12] = phys | flags;
+
+	kprintf(K_INFO, "Mapped %x to %x with %x flags\n", virt, phys, flags);
 }
 
 void virt_unmap_page_table(pdirectory *dir, u32int virt) {
@@ -217,36 +220,46 @@ void page_fault(registers_t *regs) {
 
 void virt_init() {
 	ptable *table = (ptable *)mem_alloc_block();
-	if (!table) {
-		kprintf(K_ERROR, "Could not allocate page table\n");
+	if (!table)
 		return;
-	}
 
-	virt_ptable_clear(table);
+	ptable *table2 = (ptable *)mem_alloc_block();
+	if (!table2)
+		return;
 
-	for (int i = 0, frame = 0; i < 1024; i++, frame += 4096) {
+	memset(table, 0, sizeof(ptable));
+
+	for (int i = 0, frame = 0x0, virt = 0x00000000; i < 1024; i++, frame += 4096, virt += 4096) {
 		pt_entry page = 0;
 		pt_entry_add_attrib(&page, PTE_PRESENT);
-		pt_entry_add_attrib(&page, PTE_USER);
-		pt_entry_add_attrib(&page, PTE_WRITABLE);
 		pt_entry_set_frame(&page, frame);
 
-		table->m_entries[virt_ptable_virt_to_index(frame)] = page;
+		table2->m_entries[PAGE_TABLE_INDEX(virt)] = page;
+	}
+
+	for (int i = 0, frame = 0x100000, virt = 0xC0000000; i < 1024; i++, frame += 4096, virt += 4096) {
+		pt_entry page = 0;
+		pt_entry_add_attrib(&page, PTE_PRESENT);
+		pt_entry_set_frame(&page, frame);
+
+		table->m_entries[PAGE_TABLE_INDEX(virt)] = page;
 	}
 
 	pdirectory *dir = (pdirectory *)mem_alloc_blocks(3);
-	if (!dir) {
-		kprintf(K_ERROR, "Could not allocate page directory\n");
+	if (!dir)
 		return;
-	}
 
-	virt_pdirectory_clear(dir);
+	memset(dir, 0, sizeof(pdirectory));
 
-	pd_entry *entry = virt_pdirectory_lookup_entry(dir, 0);
+	pd_entry *entry = &dir->m_entries[PAGE_DIRECTORY_INDEX(0xC0000000)];
 	pd_entry_add_attrib(entry, PDE_PRESENT);
 	pd_entry_add_attrib(entry, PDE_WRITABLE);
-	pd_entry_add_attrib(entry, PDE_USER);
 	pd_entry_set_frame(entry, (physical_addr)table);
+
+	pd_entry *entry2 = &dir->m_entries[PAGE_DIRECTORY_INDEX(0x00000000)];
+	pd_entry_add_attrib(entry2, PDE_PRESENT);
+	pd_entry_add_attrib(entry2, PDE_WRITABLE);
+	pd_entry_set_frame(entry2, (physical_addr)table2);
 
 	cur_pdbr = (physical_addr)&dir->m_entries;
 

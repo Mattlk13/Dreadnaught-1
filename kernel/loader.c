@@ -139,8 +139,40 @@ int exec(char *path, int argc, char **argv, char **env) {
 	mem_free_blocks(header, cnt);
 	vol_close_file(&exe);
 
-	void *stack = (void *) = (void *)(mainThread->imageBase + mainThread->imageSize + PAGE_SIZE);
+	void *stack = (void *)(mainThread->imageBase + mainThread->imageSize + PAGE_SIZE);
 	void *stackPhys = (void *)mem_alloc_block();
+
+	// map user stack
+	virt_map_phys_addr(proc->pageDirectory,
+		(u32int)stack, (u32int)stackPhys,
+		PTE_PRESENT|PTE_WRITABLE|PTE_USER);
+
+	// final init stuff
+	mainThread->initialStack = stack;
+	mainThread->frame.esp = (u32int)mainThread->initialStack;
+	mainThread->frame.ebp = mainThread->frame.esp;
+
+	tss_set_stack(0x10, (u32int)stackPhys);
+
+	asm volatile("cli");
+	//mem_load_PDBR((physical_addr)proc->pageDirectory);
+
+	kprintf(K_INFO, "Here we go.......\n");
+
+	// Hold on to your butts!!
+	asm volatile(" \
+		mov $0x23, %%ax; \
+		mov %%ax, %%ds; \
+		mov %%ax, %%es; \
+		mov %%ax, %%fs; \
+		mov %%ax, %%gs; \
+		pushl $0x23; \
+		pushl %0; \
+		pushl $0x200; \
+		pushl $0x1B; \
+		pushl %1; \
+		iret; \
+		":: "r" (mainThread->frame.esp), "m" (mainThread->frame.eip));
 
 	return -1; // we should never get here
 }
