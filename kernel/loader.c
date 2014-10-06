@@ -42,7 +42,7 @@ int exec(char *path, int argc, char **argv, char **env) {
 		}
 
 		if (cnt == 0)
-			header = (Elf32_Header *)page;
+			header = (Elf32_Header *)page; // Get head (hehe)
 
 		cnt++;
 	}
@@ -67,8 +67,80 @@ int exec(char *path, int argc, char **argv, char **env) {
 		header->e_phnum, header->e_shentsize, header->e_shnum);
 	kprintf(K_NONE, "\tshstrndx: %d\n", header->e_shstrndx);
 
+	// Do some process setup
+	proc = get_current_process();
+	proc->id = 1;
+	proc->pageDirectory = address_space;
+	proc->priority = 1;
+	proc->state = PROCESS_STATE_ACTIVE;
+	proc->threadCount = 1;
+
+	// Thread setup
+	mainThread = &proc->threads[0];
+	mainThread->kernelStack = 0;
+	mainThread->parent = proc;
+	mainThread->priority = 1;
+	mainThread->state = PROCESS_STATE_ACTIVE;
+	mainThread->initialStack = 0;
+	mainThread->stackLimit = (void *)((u32int)mainThread->initialStack + 4096);
+	// NEED To set:
+	//		imageBase
+	//		imageSize
+	//		Clear trap frame
+	//		set trap eip
+	//		set trap flags
+
 	// load segments into memory
-	
+	for (uintptr_t i = 0; i < (u32int)header->e_shentsize * header->e_shnum; i += header->e_shentsize) {
+		// get section header
+		Elf32_Shdr *shdr = (Elf32_Shdr *)((uintptr_t)header + (header->e_shoff + i));
+		if (shdr->sh_addr) {
+			kprintf(K_DEBUG, "Section header found!\n");
+			//if (shdr->sh_addr < proc->image.entry) {
+				// set the lowest entry point
+				proc->image.entry = shdr->sh_addr;
+				kprintf(K_NONE, "\n\tSetting new image entry to %x\n", shdr->sh_addr);
+			//}
+
+			proc->image.size = shdr->sh_addr + shdr->sh_size - proc->image.entry;
+
+			if (shdr->sh_type == SHT_NOBITS) {
+				memset((void *)(shdr->sh_addr), 0x0, shdr->sh_size);
+			} else {
+				int n = shdr->sh_size / PAGE_SIZE;
+				u32int *sHead; // head of block
+				for (int j = 0; j < n; j++) {
+					// allocate memory
+					u32int *block = (u32int *)mem_alloc_block();
+
+					// map the new block to where the process wants
+					virt_map_phys_addr(proc->pageDirectory, 
+						shdr->sh_addr+j*PAGE_SIZE,
+						(u32int)block,
+						PTE_PRESENT|PTE_WRITABLE|PTE_USER);
+
+					if (j == 0)
+						sHead = block; // get a reference to the start of mem
+				}
+
+				memcpy((void *)sHead, (void *)((uintptr_t)header + shdr->sh_offset), shdr->sh_size);
+			}
+		}
+	}
+
+	uintptr_t entry = (uintptr_t)header->e_entry;
+
+	mainThread->imageBase = proc->image.entry;
+	mainThread->imageSize = proc->image.size;
+	memset(&mainThread->frame, 0, sizeof(trapFrame));
+	mainThread->frame.eip = entry;
+	mainThread->frame.flags = 0x200;
+
+	mem_free_blocks(header, cnt);
+	vol_close_file(&exe);
+
+	void *stack = (void *) = (void *)(mainThread->imageBase + mainThread->imageSize + PAGE_SIZE);
+	void *stackPhys = (void *)mem_alloc_block();
 
 	return -1; // we should never get here
 }
