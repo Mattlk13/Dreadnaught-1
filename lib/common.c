@@ -42,7 +42,7 @@ u32int strlen(const char *str) {
 }
 
 static char *panicMsg = " \
-                           ---------\n\
+                            --------\n\
                             |  X   X |\n\
                             |        |\n\
                             |  ----  |\n\
