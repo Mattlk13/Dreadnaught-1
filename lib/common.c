@@ -41,11 +41,20 @@ u32int strlen(const char *str) {
 	return len;
 }
 
+static char *panicMsg = " \
+                            ---------\n\
+                            |  X   X |\n\
+                            |        |\n\
+                            |  ----  |\n\
+                            `--------`\n\
+                            /         \\\n\n";
+
 extern void panic(const char *message, const char *file, u32int line)
 {
     // We encountered a massive problem and have to stop.
     asm volatile("cli"); // Disable interrupts.
 
+    mon_write(panicMsg);
     mon_write("PANIC(");
     mon_write(message);
     mon_write(") at ");
