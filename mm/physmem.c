@@ -93,7 +93,7 @@ void mem_init(size_t memSize, u32int bitmap) {
 	memset(memory_map, 0x0, mem_get_block_count() / BLOCKS_PER_BYTE);
 
 	// reserve nececarry areas of memory
-	mem_deinit_region(0x0, bitmap+max_blocks);
+	mem_deinit_region(0x0, 4000000);
 	kprintf(K_OK, "Memory initialized with %d blocks free\n", mem_get_free_block_count());
 }
 

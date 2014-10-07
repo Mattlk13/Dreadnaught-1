@@ -104,8 +104,8 @@ void virt_free_page(pt_entry *e) {
 	pt_entry_del_attrib(e, PTE_PRESENT);
 }
 
-void virt_map_page(void *phys, void *virt) {
-	pdirectory *pageDirectory = virt_get_directory();
+void virt_map_page(pdirectory *pageDirectory, void *virt, void *phys, u32int flags) {
+	//pdirectory *pageDirectory = virt_get_directory();
 
 	pd_entry *e = &pageDirectory->m_entries[PAGE_DIRECTORY_INDEX((u32int)virt)];
 	if ((*e & PTE_PRESENT) != PTE_PRESENT) {
@@ -129,8 +129,25 @@ void virt_map_page(void *phys, void *virt) {
 
 	pt_entry_set_frame(page, (physical_addr)phys);
 	pt_entry_add_attrib(page, PTE_PRESENT);
+	pt_entry_add_attrib(page, PTE_WRITABLE);
 	pt_entry_add_attrib(page, PTE_USER);
 
+}
+
+void virt_check_address_present(pdirectory *dir, u32int virt, u32int phys) {
+	pd_entry *e = &dir->m_entries[PAGE_DIRECTORY_INDEX((u32int)virt)];
+	if ((*e & PDE_PRESENT) != PDE_PRESENT) {
+		kprintf(K_ERROR, "Table not present.\n");
+		return;
+	}
+
+	ptable *table = (ptable *)PAGE_GET_PHYSICAL_ADDRESS(e);
+	pt_entry page = table->m_entries[PAGE_TABLE_INDEX((u32int)virt)];
+
+	if (!pt_entry_is_present(page))
+		kprintf(K_ERROR, "Page not present.\n");
+	else
+		kprintf(K_OK, "Good to go!\n");
 }
 
 int virt_create_page_table(pdirectory *dir, u32int virt, u32int flags) {

@@ -27,6 +27,9 @@ typedef struct pdirectory_struct {
 void MmMapPage(void *phys, void *virt);
 void virt_init();
 
+void virt_map_page(pdirectory *pageDirectory, void *virt, void *phys, u32int flags);
+void virt_check_address_present(pdirectory *dir, u32int virt, u32int phys);
+
 u8int virt_alloc_page(pt_entry *p);
 void virt_free_page(pt_entry *p);
 

@@ -136,9 +136,6 @@ int exec(char *path, int argc, char **argv, char **env) {
 	mainThread->frame.eip = entry;
 	mainThread->frame.flags = 0x200;
 
-	mem_free_blocks(header, cnt);
-	vol_close_file(&exe);
-
 	void *stack = (void *)(mainThread->imageBase + mainThread->imageSize + PAGE_SIZE);
 	void *stackPhys = (void *)mem_alloc_block();
 
@@ -147,15 +144,18 @@ int exec(char *path, int argc, char **argv, char **env) {
 		(u32int)stack, (u32int)stackPhys,
 		PTE_PRESENT|PTE_WRITABLE|PTE_USER);
 
+	mem_free_blocks(header, cnt);
+	vol_close_file(&exe);
+
 	// final init stuff
 	mainThread->initialStack = stack;
 	mainThread->frame.esp = (u32int)mainThread->initialStack;
 	mainThread->frame.ebp = mainThread->frame.esp;
 
-	tss_set_stack(0x10, (u32int)stackPhys);
-
 	asm volatile("cli");
 	//mem_load_PDBR((physical_addr)proc->pageDirectory);
+	tss_set_stack(0x10, (u32int)stack);
+	virt_check_address_present(proc->pageDirectory, entry, 0);
 
 	kprintf(K_INFO, "Here we go.......\n");
 
@@ -167,10 +167,10 @@ int exec(char *path, int argc, char **argv, char **env) {
 		mov %%ax, %%fs; \
 		mov %%ax, %%gs; \
 		pushl $0x23; \
-		pushl %0; \
+		push %0; \
 		pushl $0x200; \
 		pushl $0x1B; \
-		pushl %1; \
+		push %1; \
 		iret; \
 		":: "r" (mainThread->frame.esp), "m" (mainThread->frame.eip));
 
