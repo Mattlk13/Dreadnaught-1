@@ -42,12 +42,12 @@ u32int strlen(const char *str) {
 }
 
 static char *panicMsg = " \
-                            ---------\n\
+                           ---------\n\
                             |  X   X |\n\
                             |        |\n\
                             |  ----  |\n\
                             `--------`\n\
-                            /         \\\n\n";
+                            / d3adb0x \\\n\n";
 
 extern void panic(const char *message, const char *file, u32int line)
 {

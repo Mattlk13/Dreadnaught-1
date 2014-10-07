@@ -232,6 +232,7 @@ void page_fault(registers_t *regs) {
 	mon_write(") at ");
 	mon_write_hex(fault_addr);
 	mon_write("\n");
+	kprintf(K_NONE, "\t  eip: %x cs: %x esp: %x\n", regs->eip, regs->cs, regs->esp);
 	PANIC("Page Fault");
 }
 
