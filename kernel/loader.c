@@ -161,18 +161,18 @@ int exec(char *path, int argc, char **argv, char **env) {
 
 	// Hold on to your butts!!
 	asm volatile(" \
-		mov $0x23, %%ax; \
-		mov %%ax, %%ds; \
-		mov %%ax, %%es; \
-		mov %%ax, %%fs; \
-		mov %%ax, %%gs; \
-		pushl $0x23; \
-		push %0; \
-		pushl $0x200; \
-		pushl $0x1B; \
-		push %1; \
-		iret; \
-		":: "r" (mainThread->frame.esp), "m" (mainThread->frame.eip));
+      pushl $0x23; \
+      push %0; \
+      pushl $0x200; \
+      pushl $0x1B; \
+      push %1; \
+      mov $0x23, %%ax; \
+      mov %%ax, %%ds; \
+      mov %%ax, %%es; \
+      mov %%ax, %%fs; \
+      mov %%ax, %%gs; \
+      iret; \
+      ":: "r" (mainThread->frame.esp), "m" (mainThread->frame.eip));
 
 	return -1; // we should never get here
 }

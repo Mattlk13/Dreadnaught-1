@@ -5,7 +5,8 @@
 [BITS 32]
 [GLOBAL _start]
 _start:
-	pop eax ; I dont know if this is needed
+;	pop eax ; I dont know if this is needed
 ;	add esp, 4
-	extern main
-	call main ; should be done here
+;	extern main
+;	call main ; should be done here
+	jmp $
