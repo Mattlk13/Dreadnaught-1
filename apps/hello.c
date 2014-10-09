@@ -1,16 +1,14 @@
+#include "syscall.h"
+
 int main() {
-	char *str = "\n\n\nHelloWorld.exe\n\nI\'m out!\n\n";
+	syscall_mon_write("\nHello World!!!\n\n");
 
-	asm(" \
-		mov %0, %%ebx; \
-		mov 2, %%eax; \
-		int $0x80; \
-		":: "r" (str));
+	for (int i = 0; i < 10; i++) {
+		for (int j = 0; j < i; j++)
+			syscall_mon_write(" ");
+		
+		syscall_mon_write(">\n");
+	}
 
-	asm(" \
-		mov 3, %eax; \
-		int $0x80; \
-		");
-
-	for (;;);
+	return 0;
 }

@@ -1,4 +1,4 @@
-SOURCES := crtbegin.o hello.o
+SOURCES := crtbegin.o hello.o syscall.o
 
 CC=i686-elf-gcc
 

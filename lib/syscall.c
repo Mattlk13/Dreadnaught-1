@@ -15,7 +15,7 @@ static void *syscalls[4] = {
 	&mon_write,
 	&terminateProcess
 };
-u32int num_syscalls = 3;
+u32int num_syscalls = 4;
 
 DEFN_SYSCALL2(kprintf, 0, int, const char *);
 DEFN_SYSCALL0(getch, 1);
