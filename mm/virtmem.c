@@ -233,7 +233,6 @@ void page_fault(registers_t *regs) {
 	mon_write_hex(fault_addr);
 	mon_write("\n");
 	kprintf(K_NONE, "\t  eip: %x cs: %x esp: %x ss: %x\n", regs->eip, regs->cs, regs->esp, regs->ss);
-	virt_check_address_present(cur_directory, 0x300000, 0);
 	PANIC("Page Fault");
 }
 

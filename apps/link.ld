@@ -1,5 +1,5 @@
 ENTRY(_start)
-phys = 0x00300000;
+phys = 0x02000000;
 SECTIONS
 {
 	.text phys : AT(phys) {

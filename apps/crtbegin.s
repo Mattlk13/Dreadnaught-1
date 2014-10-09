@@ -9,4 +9,6 @@ _start:
 ;	add esp, 4
 ;	extern main
 ;	call main ; should be done here
-	jmp $
+;	jmp $
+	mov eax, 3
+	int 0x80

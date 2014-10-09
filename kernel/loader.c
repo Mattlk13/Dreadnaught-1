@@ -124,9 +124,36 @@ int exec(char *path, int argc, char **argv, char **env) {
 				}
 
 				memcpy((void *)sHead, (void *)((uintptr_t)header + shdr->sh_offset), shdr->sh_size);
+
 			}
 		}
 	}
+
+	/*for (int i = 0; i < header->e_phnum; i++) {
+		Elf32_Phdr *phdr = (Elf32_Phdr *)(header+(header->e_phoff+(header->e_phentsize*i)));
+
+		if (phdr->p_type != 1)
+			continue;
+
+		proc->image.size = phdr->p_filesz;
+		proc->image.entry = phdr->p_vaddr;
+
+		int n = phdr->p_filesz / PAGE_SIZE;
+		u32int *pHead; // head of block
+		for (int j = 0; j < n; j++) {
+			u32int *block = (u32int *)mem_alloc_block();
+
+			virt_map_phys_addr(proc->pageDirectory,
+				phdr->p_vaddr+j*PAGE_SIZE,
+				(u32int)block,
+				PTE_PRESENT|PTE_WRITABLE|PTE_USER);
+
+			if (j == 0)
+				pHead = block;
+		}
+
+		memcpy((void *)pHead, (void *)((uintptr_t)header + phdr->p_offset), phdr->p_filesz);
+	}*/
 
 	uintptr_t entry = (uintptr_t)header->e_entry;
 
@@ -136,7 +163,7 @@ int exec(char *path, int argc, char **argv, char **env) {
 	mainThread->frame.eip = entry;
 	mainThread->frame.flags = 0x200;
 
-	void *stack = (void *)(mainThread->imageBase + mainThread->imageSize + PAGE_SIZE);
+	void *stack = (void *)(mainThread->imageBase + mainThread->imageSize/* + PAGE_SIZE*/);
 	void *stackPhys = (void *)mem_alloc_block();
 
 	// map user stack
@@ -155,7 +182,6 @@ int exec(char *path, int argc, char **argv, char **env) {
 	asm volatile("cli");
 	//mem_load_PDBR((physical_addr)proc->pageDirectory);
 	tss_set_stack(0x10, (u32int)stack);
-	virt_check_address_present(proc->pageDirectory, entry, 0);
 
 	kprintf(K_INFO, "Here we go.......\n");
 
