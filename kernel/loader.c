@@ -26,8 +26,6 @@ int exec(char *path, int argc, char **argv, char **env) {
 	pdirectory *address_space = virt_get_directory();
 	process *proc;
 	thread *mainThread;
-	unsigned char *memory;
-	unsigned char buf[4096];
 
 	if (exe.flags == FS_INVALID)
 		return PROCESS_INVALID_ID;
