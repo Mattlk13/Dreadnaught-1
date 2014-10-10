@@ -4,74 +4,117 @@
 
 #include "lib/stdio.h"
 #include "lib/timer.h"
+#include "lib/string.h"
 
-u8int ide_read(u8int channel) {
+static char drive_char = 'a';
 
+struct ata_device {
+	int io_base;
+	int control;
+	int slave;
+	ata_identify_t identity;
+};
+
+static void ata_io_wait(struct ata_device *dev) {
+	inb(dev->io_base + ATA_REG_ALTSTATUS);
+	inb(dev->io_base + ATA_REG_ALTSTATUS);
+	inb(dev->io_base + ATA_REG_ALTSTATUS);
+	inb(dev->io_base + ATA_REG_ALTSTATUS);
 }
 
-void ide_wait_til_ready(u16int base) {
-	while (!(inb(base) & 0x08));
+static int ata_wait(struct ata_device *dev, int advanced) {
+	u8int status = 0;
+
+	ata_io_wait(dev);
+
+	while ((status = inb(dev->io_base + ATA_REG_STATUS)) & ATA_SR_BSY);
+
+	if (advanced) {
+		status = inb(dev->io_base + ATA_REG_STATUS);
+		if (status 	 & ATA_SR_ERR) 	return 1;
+		if (status 	 & ATA_SR_DF)	return 1;
+		if (!(status & ATA_SR_DRQ)) return 1;
+	}
+
+	return 0;
 }
 
-int ide_detect_drive(u8int ide, unsigned long drive) {
-	u16int tmpword;
-	u8int check;
-	u16int base;
-	u16int buf[256];
-	u16int idx;
+static void ata_soft_reset(struct ata_device *dev) {
+	outb(dev->control, 0x04);
+	outb(dev->control, 0x00);
+}
 
-	switch (ide) {
-		case 0:
-			base = 0x1F0;
-			break;
-		case 1:
-			base = 0x170;
-			break;
-		default:
-			return 0; // only 2 IDE controllers
-			break;
+static void ata_device_init(struct ata_device *dev) {
+	kprintf(K_INFO, "Initializing device on bus %x\n", dev->io_base);
+
+	outb(dev->io_base + 1, 1);
+	outb(dev->control, 0);
+
+	outb(dev->io_base + ATA_REG_HDDEVSEL, 0xA0 | dev->slave << 4);
+	ata_io_wait(dev);
+
+	int status = inb(dev->io_base + ATA_REG_COMMAND);
+	kprintf(K_INFO, "Device status: %d\n", status);
+
+	ata_wait(dev, 0);
+
+	u16int *buf = (u16int *)&dev->identity;
+
+	for (int i = 0; i < 256; i++) {
+		buf[i] = inw(dev->io_base);
 	}
 
-	outb(base+3, 0x88); 	// write
-	check = inb(base + 3);  // read back
-
-	if (check != 0x88) {
-		kprintf(K_ERROR, "The IDE controller %d does not exist.\n", ide);
-		return 0;
-	} else {
-		kprintf(K_INFO, "IDE controller %d exists.\n", ide);
+	u8int *ptr = (u8int *)&dev->identity.model;
+	for (int i = 0; i < 39; i += 2) {
+		u8int tmp = ptr[i+1];
+		ptr[i+1] = ptr[i];
+		ptr[i] = tmp;
 	}
 
-	outb(base+6, 0xA0 | (drive << 4));
-	kprintf(K_INFO, "Sleeping...\n");
-	sleep(1);
-	kprintf(K_INFO, "Done sleeping.\n");
+	kprintf(K_INFO, "Deivce name: %s\n", dev->identity.model);
+	kprintf(K_NONE, "\tSectors (48): %d\n", (u32int)dev->identity.sectors_48);
+	kprintf(K_NONE, "\tSectors (24): %d\n", dev->identity.sectors_28);
 
-	outb(base+7, 0xEC); // send identify
-	ide_wait_til_ready(base+7);
+	outb(dev->io_base + ATA_REG_CONTROL, 0x02);
+}
 
-	buf[0] = inw(base);
+static int ata_device_detect(struct ata_device *dev) {
+	ata_soft_reset(dev);
+	outb(dev->io_base + ATA_REG_HDDEVSEL, 0xA0 | dev->slave << 4);
+	ata_io_wait(dev);
 
-	if (buf[0]) { // exists
-		kprintf(K_OK, "Drive %d exists.\n", ide);
+	unsigned char cl = inb(dev->io_base + ATA_REG_LBA1); // CYL_LO
+	unsigned char ch = inb(dev->io_base + ATA_REG_LBA2); // CYL_HI
 
-		for (int idx = 1; idx < 256; idx++)
-			buf[idx] = inw(base);
+	kprintf(K_INFO, "Device detected: %x %x\n", cl, ch);
+	if (cl == 0xFF && ch == 0xFF) {
+		return 0; // No drive
+	} else if (cl == 0x00 && ch == 0x00) {
+		// Parallel ATA device
 
-		if (buf[0] | 0x0040 == buf[0]) {
-			kprintf(K_OK, "Hard drive\n");
-		} else {
-			kprintf(K_ERROR, "No Hard Drive.\n");
-			return 0;
-		}
+		char devname[64] = "/dev/hd";
+		char devID[1];
+		devID[0] = drive_char;
+		strcat(devname, devID);
+		drive_char++;
+		kprintf(K_INFO, "%s ready to be mounted.\n", devname);
+
+		ata_device_init(dev);
 
 		return 1;
-	} else {
-		kprintf(K_ERROR, "Drive does not exist.\n");
-		return 0;
 	}
+
+	return 0;
 }
 
+static struct ata_device ata_primary_master   = {.io_base = 0x1F0, .control = 0x3F6, .slave = 0};
+static struct ata_device ata_primary_slave	  = {.io_base = 0x1F0, .control = 0x3F6, .slave = 1};
+static struct ata_device ata_secondary_master = {.io_base = 0x170, .control = 0x376, .slave = 0};
+static struct ata_device ata_secondary_slave  = {.io_base = 0x170, .control = 0x376, .slave = 1};
+
 void ide_install() {
-	ide_detect_drive(1, 1);
+	ata_device_detect(&ata_primary_master);
+	ata_device_detect(&ata_primary_slave);
+	ata_device_detect(&ata_secondary_master);
+	ata_device_detect(&ata_secondary_slave);
 }
