@@ -9,6 +9,7 @@
 static char drive_char = 'a';
 
 #define ATA_TIMEOUT 300
+#define ATA_SECTOR_SIZE 512
 
 struct ata_device {
 	int io_base;
@@ -19,6 +20,90 @@ struct ata_device {
 
 static size_t ata_max_offset(struct ata_device *dev) {
 	size_t sectors = dev->identity.sectors_48;
+	if (!sectors)
+		sectors = dev->identity.sectors_28;
+
+	return sectors * ATA_SECTOR_SIZE;
+}
+
+static void ata_device_read_sector(struct ata_device *dev, u32int lba, u8int *buf) {
+	u16int bus = dev->io_base;
+	u8int slave = dev->slave;
+
+	// TODO: lock
+	int errors = 0;
+try_again:
+	outb(bus + ATA_REG_CONTROL, 0x02);
+
+	ata_wait(dev, 0);
+
+	outb(bus + ATA_REG_HDDEVSEL, 0xE0 | slave << 4 | (lba & 0x0F000000) >> 24);
+	outb(bus + ATA_REG_FEATURES, 0x00);
+	outb(bus + ATA_REG_SECCOUNT0, 1);
+	outb(bus + ATA_REG_LBA0, (lba & 0x000000FF) >> 0);
+	outb(bus + ATA_REG_LBA1, (lba & 0x0000FF00) >> 8);
+	outb(bus + ATA_REG_LBA2, (lba & 0x00FF0000) >> 16);
+	outb(bus + ATA_REG_COMMAND, ATA_CMD_READ_PIO);
+
+	if (ata_wait(dev, 1)) {
+		kprintf(K_WARN, "Error during ATA read of lba block %d\n", lba);
+		errors++;
+		if (errors > 4) {
+			kprintf(K_ERROR, "Too many errors trying to read. Kicking out of read.\n");
+			// TODO: unlock
+			return;
+		}
+		goto try_again
+	}
+
+	int size = 256;
+	inportsm(bus, buf, size);
+	ata_wait(dev, 0);
+	// TODO: unlock
+}
+
+static u32int read_ata(struct ata_device *dev, u32int offset, u32int size, u8int *buffer) {
+	unsigned int start_block = offset / ATA_SECTOR_SIZE;
+	unsigned int end_block = (offset + size - 1) / ATA_SECTOR_SIZE;
+
+	unsigned int x_offset = 0;
+
+	if (offset > ata_max_offset(dev))
+		return 0;
+
+	if (offset + size > ata_max_offset(dev)) {
+		unsigned int i = ata_max_offset(dev) - offset;
+		size = i;
+	}
+
+	if (offset % ATA_SECTOR_SIZE) {
+		unsigned int prefix_size = (ATA_SECTOR_SIZE - (offset % ATA_SECTOR_SIZE));
+		char tmp[512];
+		ata_device_read_sector(dev, start_block, (u8int *)tmp);
+
+		memcpy(buffer, (void *)((uintptr_t)tmp + (offset % ATA_SECTOR_SIZE)), prefix_size);
+
+		x_offset += prefix_size;
+		start_block++;
+	}
+
+	if ((offset + size) % ATA_SECTOR_SIZE && start_block < end_block) {
+		unsigned int postfix_size = (offset + size) % ATA_SECTOR_SIZE;
+		char tmp[ATA_SECTOR_SIZE];
+		ata_device_read_sector(dev, end_block, (u8int *)tmp);
+
+		memcpy((void *)((uintptr_t)buffer + size - postfix_size), tmp, postfix_size);
+
+		end_block--;
+	}
+
+	while (start_block <= end_block) {
+		ata_device_read_sector(dev, start_block, (u8int *)((uintptr_t)buffer + x_offset));
+		x_offset += ATA_SECTOR_SIZE;
+		start_block++;
+	}
+
+	return size;
 }
 
 static void ata_io_wait(struct ata_device *dev) {
@@ -128,6 +213,7 @@ static int ata_device_detect(struct ata_device *dev) {
 	outb(iobase + 2, 0xAB);
 	if (inb(iobase + 2) != 0xAB) {
 		// No dice
+		kprintf(K_ERROR, "No dice.\n");
 		return -1;
 	}
 
@@ -166,13 +252,11 @@ static int ata_device_detect(struct ata_device *dev) {
 		info[i] = inw(dev->io_base + 0);
 
 	u8int *ptr = (u8int *)&dev->identity.model;
-	for (int i = 0; i < 39; i += 2) {
+	for (i = 0; i < 39; i += 2) {
 		u8int tmp = ptr[i+1];
 		ptr[i+1] = ptr[i];
 		ptr[i] = tmp;
 	}
-
-	dev->identity.sectors_28 = info[6];
 
 	kprintf(K_INFO, "Deivce name: %s\n", dev->identity.model);
 	kprintf(K_NONE, "\tSectors (48): %d\n", (u32int)dev->identity.sectors_48);
@@ -185,8 +269,8 @@ static struct ata_device ata_secondary_master = {.io_base = 0x170, .control = 0x
 static struct ata_device ata_secondary_slave  = {.io_base = 0x170, .control = 0x376, .slave = 1};
 
 void ide_install() {
-	ata_device_detect(&ata_primary_master);
-	ata_device_detect(&ata_primary_slave);
+	//ata_device_detect(&ata_primary_master);
+	//ata_device_detect(&ata_primary_slave);
 	ata_device_detect(&ata_secondary_master);
 	ata_device_detect(&ata_secondary_slave);
 }

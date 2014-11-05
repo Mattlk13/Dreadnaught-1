@@ -20,6 +20,10 @@ u16int inw(u16int port) {
 	return ret;
 }
 
+void inportsm(unsigned short port, unsigned char * data, unsigned long size) {
+    asm volatile ("rep insw" : "+D" (data), "+c" (size) : "d" (port) : "memory");
+}
+
 void *memcpy(void *dest, const void *src, size_t len) {
     const char *sp = (const char *)src;
     char *dp = (char *)dest;
