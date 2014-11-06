@@ -40,8 +40,9 @@ char get_line(char *buf) {
 void cmd_help() {
 	kprintf(K_NONE, "Welcome to the Dreadnaught Operating System!!\n\n");
 	kprintf(K_NONE, "List of Commands:\n");
-	kprintf(K_NONE, "read\tRead a file from the floppy.\n");
 	kprintf(K_NONE, "help\tShow this message.\n");
+	kprintf(K_NONE, "read\tRead a file from the floppy.\n");
+	kprintf(K_NONE, "run \tRun a file from the floppy.\n");
 	kprintf(K_NONE, "ls  \tList files in directory.\n");
 	kprintf(K_NONE, "user\tEnter user mode\n");
 	kprintf(K_NONE, "clr \tClear the screen\n");

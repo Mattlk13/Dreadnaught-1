@@ -82,37 +82,26 @@ static u32int read_ata(struct ata_device *dev, u32int offset, u32int size, u8int
 
 	if (offset % ATA_SECTOR_SIZE) {
 		unsigned int prefix_size = (ATA_SECTOR_SIZE - (offset % ATA_SECTOR_SIZE));
-		kprintf(K_INFO, "Declaring memory\n");
 		char *tmp = (char *)mem_alloc_block();
-		kprintf(K_INFO, "Got memory\n");
 		ata_device_read_sector(dev, start_block, (u8int *)tmp);
 
-		kprintf(K_INFO, "Copy memory: %s\n", (u8int *)tmp);
 		memcpy(buffer, (void *)((uintptr_t)tmp + (offset % ATA_SECTOR_SIZE)), prefix_size);
-		kprintf(K_INFO, "Copied memory\n");
-
+		
 		x_offset += prefix_size;
 		start_block++;
 	}
-	kprintf(K_INFO, "Done with if\n");
 
 	if ((offset + size) % ATA_SECTOR_SIZE && start_block < end_block) {
-		kprintf(K_INFO, "About to read last block\n");
 		unsigned int postfix_size = (offset + size) % ATA_SECTOR_SIZE;
-		kprintf(K_INFO, "Declaring memory\n");
 		char *tmp = (char *)mem_alloc_block();
-		kprintf(K_INFO, "Got memory\n");
 		ata_device_read_sector(dev, end_block, (u8int *)tmp);
 
-		kprintf(K_INFO, "Copy memory\n");
 		memcpy((void *)((uintptr_t)buffer + size - postfix_size), tmp, postfix_size);
 
 		end_block--;
 	}
 
-	kprintf(K_INFO, "Loop attempt\n");
 	while (start_block <= end_block) {
-		kprintf(K_INFO, "Loopin\n");
 		ata_device_read_sector(dev, start_block, (u8int *)((uintptr_t)buffer + x_offset));
 		x_offset += ATA_SECTOR_SIZE;
 		start_block++;
@@ -399,10 +388,11 @@ void ide_install() {
 
 		kprintf(K_INFO, "Attempting read...\n");
 		if (read_ata(&ata_secondary_slave, 100, strlen(myString)+1, readStr) == strlen(myString)+1) {
-			kprintf(K_OK, "Read complete\n");
 			kprintf(K_OK, "Successfully read: %s\n", readStr);
 		} else {
 			kprintf(K_ERROR, "Read fail\n");
 		}
+	} else {
+		kprintf(K_ERROR, "Failed write.\n");
 	}
 }
