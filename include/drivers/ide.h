@@ -138,6 +138,16 @@ typedef struct {
 	u8int signature[2];
 } __attribute__((packed)) mbr_t;
 
+struct ata_device {
+	int io_base;
+	int control;
+	int slave;
+	ata_identify_t identity;
+};
+
 void ide_install();
+struct ata_device *getHDD();
+static u32int write_ata(struct ata_device *dev, u32int offset, u32int size, u8int *buffer);
+static u32int read_ata(struct ata_device *dev, u32int offset, u32int size, u8int *buffer);
 
 #endif

@@ -13,13 +13,6 @@ static char drive_char = 'a';
 #define ATA_TIMEOUT 300
 #define ATA_SECTOR_SIZE 512
 
-struct ata_device {
-	int io_base;
-	int control;
-	int slave;
-	ata_identify_t identity;
-};
-
 static int ata_wait(struct ata_device *dev, int advanced);
 
 static size_t ata_max_offset(struct ata_device *dev) {
@@ -374,6 +367,10 @@ static struct ata_device ata_primary_master   = {.io_base = 0x1F0, .control = 0x
 static struct ata_device ata_primary_slave	  = {.io_base = 0x1F0, .control = 0x3F6, .slave = 1};
 static struct ata_device ata_secondary_master = {.io_base = 0x170, .control = 0x376, .slave = 0};
 static struct ata_device ata_secondary_slave  = {.io_base = 0x170, .control = 0x376, .slave = 1};
+
+struct ata_device *getHDD() {
+	return &ata_primary_master;
+}
 
 void ide_install() {
 	//ata_device_detect(&ata_primary_master);
