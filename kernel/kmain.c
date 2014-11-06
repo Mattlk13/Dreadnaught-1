@@ -85,7 +85,7 @@ int kmain(multiboot_info_t *bootinfo) {
 	ide_install();
 
 	//read_from_floppy();
-
+	kprintf(K_OK, "HDD installed\n");
 	initialize_syscalls();
 	//switch_to_user_mode();
 

@@ -6,6 +6,8 @@
 #include "lib/timer.h"
 #include "lib/string.h"
 
+#include "mm/physmem.h"
+
 static char drive_char = 'a';
 
 #define ATA_TIMEOUT 300
@@ -17,6 +19,8 @@ struct ata_device {
 	int slave;
 	ata_identify_t identity;
 };
+
+static int ata_wait(struct ata_device *dev, int advanced);
 
 static size_t ata_max_offset(struct ata_device *dev) {
 	size_t sectors = dev->identity.sectors_48;
@@ -53,7 +57,7 @@ try_again:
 			// TODO: unlock
 			return;
 		}
-		goto try_again
+		goto try_again;
 	}
 
 	int size = 256;
@@ -78,10 +82,119 @@ static u32int read_ata(struct ata_device *dev, u32int offset, u32int size, u8int
 
 	if (offset % ATA_SECTOR_SIZE) {
 		unsigned int prefix_size = (ATA_SECTOR_SIZE - (offset % ATA_SECTOR_SIZE));
+		kprintf(K_INFO, "Declaring memory\n");
+		char *tmp = (char *)mem_alloc_block();
+		kprintf(K_INFO, "Got memory\n");
+		ata_device_read_sector(dev, start_block, (u8int *)tmp);
+
+		kprintf(K_INFO, "Copy memory: %s\n", (u8int *)tmp);
+		memcpy(buffer, (void *)((uintptr_t)tmp + (offset % ATA_SECTOR_SIZE)), prefix_size);
+		kprintf(K_INFO, "Copied memory\n");
+
+		x_offset += prefix_size;
+		start_block++;
+	}
+	kprintf(K_INFO, "Done with if\n");
+
+	if ((offset + size) % ATA_SECTOR_SIZE && start_block < end_block) {
+		kprintf(K_INFO, "About to read last block\n");
+		unsigned int postfix_size = (offset + size) % ATA_SECTOR_SIZE;
+		kprintf(K_INFO, "Declaring memory\n");
+		char *tmp = (char *)mem_alloc_block();
+		kprintf(K_INFO, "Got memory\n");
+		ata_device_read_sector(dev, end_block, (u8int *)tmp);
+
+		kprintf(K_INFO, "Copy memory\n");
+		memcpy((void *)((uintptr_t)buffer + size - postfix_size), tmp, postfix_size);
+
+		end_block--;
+	}
+
+	kprintf(K_INFO, "Loop attempt\n");
+	while (start_block <= end_block) {
+		kprintf(K_INFO, "Loopin\n");
+		ata_device_read_sector(dev, start_block, (u8int *)((uintptr_t)buffer + x_offset));
+		x_offset += ATA_SECTOR_SIZE;
+		start_block++;
+	}
+
+	return size;
+}
+
+static void ata_device_write_sector(struct ata_device *dev, u32int lba, u8int *buf) {
+	u16int bus = dev->io_base;
+	u8int slave = dev->slave;
+
+	// TODO: lock
+
+	outb(bus + ATA_REG_CONTROL, 0x02);
+
+	ata_wait(dev, 0);
+	outb(bus + ATA_REG_HDDEVSEL, 0xE0 | slave << 4 | (lba & 0x0F000000) >> 24);
+	ata_wait(dev, 0);
+
+	outb(bus + ATA_REG_FEATURES, 0x00);
+	outb(bus + ATA_REG_SECCOUNT0, 0x01);
+	outb(bus + ATA_REG_LBA0, (lba & 0x000000FF) >>  0);
+	outb(bus + ATA_REG_LBA1, (lba & 0x0000FF00) >>  8);
+	outb(bus + ATA_REG_LBA2, (lba & 0x00FF0000) >> 16);
+	outb(bus + ATA_REG_COMMAND, ATA_CMD_WRITE_PIO);
+	ata_wait(dev, 0);
+	int size = ATA_SECTOR_SIZE / 2;
+	outportsm(bus, buf, size);
+	outb(bus + 0x07, ATA_CMD_CACHE_FLUSH);
+	ata_wait(dev, 0);
+	// TODO: unlock
+}
+
+static int buffer_compare(u32int *ptr1, u32int *ptr2, size_t size) {
+	ASSERT(!(size % 4));
+	size_t i = 0;
+	while (i < size) {
+		if (*ptr1 != *ptr2)
+			return 1;
+
+		ptr1++;
+		ptr2++;
+		i += sizeof(u32int);
+	}
+	return 0;
+}
+
+static void ata_device_write_sector_retry(struct ata_device *dev, u32int lba, u8int *buf) {
+	u8int read_buf[ATA_SECTOR_SIZE];
+	asm volatile("cli");
+	do {
+		ata_device_write_sector(dev, lba, buf);
+		ata_device_read_sector(dev, lba, read_buf);
+	} while (buffer_compare((u32int *)buf, (u32int *)read_buf, ATA_SECTOR_SIZE));
+	asm volatile("sti");
+}
+
+static u32int write_ata(struct ata_device *dev, u32int offset, u32int size, u8int *buffer) {
+	unsigned int start_block = offset / ATA_SECTOR_SIZE;
+	unsigned int end_block = (offset + size - 1) / ATA_SECTOR_SIZE;
+
+	unsigned int x_offset = 0;
+
+	if (offset > ata_max_offset(dev))
+		return 0;
+
+	if (offset + size > ata_max_offset(dev)) {
+		unsigned int i = ata_max_offset(dev) - offset;
+		size = i;
+	}
+
+	if (offset % ATA_SECTOR_SIZE) {
+		unsigned int prefix_size = (ATA_SECTOR_SIZE - (offset % ATA_SECTOR_SIZE));
+
 		char tmp[512];
 		ata_device_read_sector(dev, start_block, (u8int *)tmp);
 
-		memcpy(buffer, (void *)((uintptr_t)tmp + (offset % ATA_SECTOR_SIZE)), prefix_size);
+		kprintf(K_INFO, "Writing first block\n");
+
+		memcpy((void *)((uintptr_t)tmp + offset % ATA_SECTOR_SIZE), buffer, prefix_size);
+		ata_device_write_sector_retry(dev, start_block, (u8int *)tmp);
 
 		x_offset += prefix_size;
 		start_block++;
@@ -89,16 +202,21 @@ static u32int read_ata(struct ata_device *dev, u32int offset, u32int size, u8int
 
 	if ((offset + size) % ATA_SECTOR_SIZE && start_block < end_block) {
 		unsigned int postfix_size = (offset + size) % ATA_SECTOR_SIZE;
-		char tmp[ATA_SECTOR_SIZE];
+
+		char tmp[512];
 		ata_device_read_sector(dev, end_block, (u8int *)tmp);
 
-		memcpy((void *)((uintptr_t)buffer + size - postfix_size), tmp, postfix_size);
+		kprintf(K_INFO, "Writing last block\n");
+
+		memcpy(tmp, (void *)((uintptr_t)buffer + size - postfix_size), postfix_size);
+
+		ata_device_write_sector_retry(dev, end_block, (u8int *)tmp);
 
 		end_block--;
 	}
 
 	while (start_block <= end_block) {
-		ata_device_read_sector(dev, start_block, (u8int *)((uintptr_t)buffer + x_offset));
+		ata_device_write_sector_retry(dev, start_block, (u8int *)((uintptr_t)buffer + x_offset));
 		x_offset += ATA_SECTOR_SIZE;
 		start_block++;
 	}
@@ -273,4 +391,18 @@ void ide_install() {
 	//ata_device_detect(&ata_primary_slave);
 	ata_device_detect(&ata_secondary_master);
 	ata_device_detect(&ata_secondary_slave);
+
+	char myString[] = "Hello world!";
+	char *readStr = (char *)mem_alloc_block();
+	if (write_ata(&ata_secondary_slave, 100, strlen(myString)+1, myString) == strlen(myString)+1) {
+		kprintf(K_OK, "Supposedly successful write\n");
+
+		kprintf(K_INFO, "Attempting read...\n");
+		if (read_ata(&ata_secondary_slave, 100, strlen(myString)+1, readStr) == strlen(myString)+1) {
+			kprintf(K_OK, "Read complete\n");
+			kprintf(K_OK, "Successfully read: %s\n", readStr);
+		} else {
+			kprintf(K_ERROR, "Read fail\n");
+		}
+	}
 }

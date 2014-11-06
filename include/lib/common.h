@@ -20,6 +20,7 @@ typedef unsigned long uintptr_t; // big enough to hold a void ptr
 void outb(u16int port, u8int value);
 u8int inb(u16int port);
 u16int inw(u16int port);
+void outportsm(unsigned short port, unsigned char * data, unsigned long size);
 void inportsm(unsigned short port, unsigned char * data, unsigned long size);
 
 // mem
