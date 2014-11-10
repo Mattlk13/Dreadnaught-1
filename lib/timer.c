@@ -34,8 +34,8 @@ void reset_tick_count() {
 }
 
 void sleep(int ms) {
-	reset_tick_count();
+	u32int target = tick + ms;
 
-	while (tick < ms)
+	while (tick < target)
 		;
 }
