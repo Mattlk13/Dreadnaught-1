@@ -5,7 +5,6 @@
 #include "fs/vfs.h"
 #include "mm/physmem.h"
 #include "lib/stdio.h"
-#include "kernel/cmd.h"
 
 #ifndef PAGE_SIZE
 #define PAGE_SIZE 4096
@@ -26,6 +25,8 @@ int exec(char *path, int argc, char **argv, char **env) {
 	pdirectory *address_space = virt_get_directory();
 	process *proc;
 	thread *mainThread;
+	unsigned char *memory;
+	unsigned char buf[4096];
 
 	if (exe.flags == FS_INVALID)
 		return PROCESS_INVALID_ID;
@@ -90,18 +91,52 @@ int exec(char *path, int argc, char **argv, char **env) {
 	//		set trap flags
 
 	// load segments into memory
-	for (int i = 0; i < header->e_phnum; i++) {
-		Elf32_Phdr *phdr = (Elf32_Phdr *)((uintptr_t)header+(header->e_phoff+(header->e_phentsize*i)));
+	for (uintptr_t i = 0; i < (u32int)header->e_shentsize * header->e_shnum; i += header->e_shentsize) {
+		// get section header
+		Elf32_Shdr *shdr = (Elf32_Shdr *)((uintptr_t)header + (header->e_shoff + i));
+		if (shdr->sh_addr) {
+			kprintf(K_DEBUG, "Section header found!\n");
+			//if (shdr->sh_addr < proc->image.entry) {
+				// set the lowest entry point
+				proc->image.entry = shdr->sh_addr;
+				kprintf(K_NONE, "\n\tSetting new image entry to %x\n", shdr->sh_addr);
+			//}
+
+			proc->image.size = shdr->sh_addr + shdr->sh_size - proc->image.entry;
+
+			if (shdr->sh_type == SHT_NOBITS) {
+				memset((void *)(shdr->sh_addr), 0x0, shdr->sh_size);
+			} else {
+				int n = shdr->sh_size / PAGE_SIZE;
+				u32int *sHead; // head of block
+				for (int j = 0; j < n; j++) {
+					// allocate memory
+					u32int *block = (u32int *)mem_alloc_block();
+
+					// map the new block to where the process wants
+					virt_map_phys_addr(proc->pageDirectory, 
+						shdr->sh_addr+j*PAGE_SIZE,
+						(u32int)block,
+						PTE_PRESENT|PTE_WRITABLE|PTE_USER);
+
+					if (j == 0)
+						sHead = block; // get a reference to the start of mem
+				}
+
+				memcpy((void *)sHead, (void *)((uintptr_t)header + shdr->sh_offset), shdr->sh_size);
+
+			}
+		}
+	}
+
+	/*for (int i = 0; i < header->e_phnum; i++) {
+		Elf32_Phdr *phdr = (Elf32_Phdr *)(header+(header->e_phoff+(header->e_phentsize*i)));
 
 		if (phdr->p_type != 1)
 			continue;
 
 		proc->image.size = phdr->p_filesz;
 		proc->image.entry = phdr->p_vaddr;
-
-		kprintf(K_DEBUG, "phdr dump:\n\tp_filesz: %x p_vaddr: %x\n",
-			phdr->p_filesz, phdr->p_vaddr);
-		kprintf(K_NONE, "\tp_type: %d\n", phdr->p_type);
 
 		int n = phdr->p_filesz / PAGE_SIZE;
 		u32int *pHead; // head of block
@@ -118,7 +153,7 @@ int exec(char *path, int argc, char **argv, char **env) {
 		}
 
 		memcpy((void *)pHead, (void *)((uintptr_t)header + phdr->p_offset), phdr->p_filesz);
-	}
+	}*/
 
 	uintptr_t entry = (uintptr_t)header->e_entry;
 
@@ -145,7 +180,7 @@ int exec(char *path, int argc, char **argv, char **env) {
 	mainThread->frame.ebp = mainThread->frame.esp;
 
 	asm volatile("cli");
-	mem_load_PDBR((physical_addr)proc->pageDirectory);
+	//mem_load_PDBR((physical_addr)proc->pageDirectory);
 	tss_set_stack(0x10, (u32int)stack);
 
 	kprintf(K_INFO, "Here we go.......\n");
@@ -200,7 +235,7 @@ void terminateProcess() {
 
 	asm volatile(" \
 		cli; \
-		mov $0x10, %ax; \
+		mov $0x10, %eax; \
 		mov %ax, %ds; \
 		mov %ax, %es; \
 		mov %ax, %fs; \
@@ -208,7 +243,6 @@ void terminateProcess() {
 		sti; \
 		");
 
-	kprintf(K_OK, "Process done.\n");
-	
-	start_cmd_prompt();
+	kprintf(K_OK, "Process done. Halting becuase I don't know what to do\n\twith my life\n");
+	for (;;);
 }
