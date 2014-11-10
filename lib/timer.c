@@ -10,9 +10,6 @@ u32int tick = 0;
 
 static void timer_callback(registers_t *regs) {
 	tick++;
-	//mon_write("Tick: ");
-	//mon_write_dec(tick);
-	//mon_write("\n");
 }
 
 void init_timer(u32int freq) {
