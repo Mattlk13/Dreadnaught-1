@@ -14,6 +14,7 @@
 
 #include "mm/physmem.h"
 #include "mm/virtmem.h"
+#include "mm/blk.h"
 
 #include "drivers/keyboard.h"
 #include "drivers/Floppy.h"
@@ -83,8 +84,8 @@ int kmain(multiboot_info_t *bootinfo) {
 	}
 	
 	ide_install();
-
 	kprintf(K_OK, "HDD installed\n");
+
 	initialize_syscalls();
 	start_cmd_prompt();
 

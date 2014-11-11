@@ -58,6 +58,8 @@ DECL_SYSCALL2(kprintf, int, const char *)
 DECL_SYSCALL0(getch)
 DECL_SYSCALL1(mon_write, const char *)
 DECL_SYSCALL0(terminateProcess)
+DECL_SYSCALL1(malloc, unsigned)
+DECL_SYSCALL1(free, void *)
 
 void initialize_syscalls();
 

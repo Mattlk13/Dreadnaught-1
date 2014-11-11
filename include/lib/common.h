@@ -5,6 +5,8 @@
 
 #define DEBUG 1
 
+#define NULL 0
+
 typedef unsigned long int u64int;
 typedef unsigned int   u32int;
 typedef			 int   s32int;

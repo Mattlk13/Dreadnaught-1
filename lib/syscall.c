@@ -7,20 +7,26 @@
 #include "kernel/isr.h"
 #include "kernel/loader.h"
 
+#include "mm/blk.h"
+
 //static void syscall_handler(registers_t *regs);
 
-static void *syscalls[4] = {
+static void *syscalls[6] = {
 	&kprintf,
 	&getch,
 	&mon_write,
-	&terminateProcess
+	&terminateProcess,
+	&malloc,
+	&free
 };
-u32int num_syscalls = 4;
+u32int num_syscalls = 6;
 
 DEFN_SYSCALL2(kprintf, 0, int, const char *);
 DEFN_SYSCALL0(getch, 1);
 DEFN_SYSCALL1(mon_write, 2, const char *);
 DEFN_SYSCALL0(terminateProcess, 3);
+DEFN_SYSCALL1(malloc, 4, unsigned);
+DEFN_SYSCALL1(free, 5, void *);
 
 static void syscall_handler(registers_t *regs) {
 	if (regs->eax >= num_syscalls)

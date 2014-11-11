@@ -3,11 +3,45 @@
 #include "mm/blk.h"
 #include "mm/physmem.h"
 
+#include "lib/stdio.h"
+
 #define NALLOC 	  4096 // Minimum # of bytes to request from the phys manager
 #define PAGE_SIZE 4096 // In other words, a page
 
+#define MEM_DEBUG 0
+
 static Header base; 		 // Used to get started on first call
 static Header *freep = NULL; // Pointer to free list
+
+void free(void *ap) {
+	Header *bp, *p;
+
+	bp = (Header *)ap - 1; // Point to actual header
+
+	if (MEM_DEBUG)
+		kprintf(K_DEBUG, "Freeing: %x\n", &bp->blk.next);
+
+	for (p = freep; !(bp > p && bp < p->blk.next); p = p->blk.next) {
+		if (p >= p->blk.next && (bp > p || bp < p->blk.next))
+			break; // Freed block at start or end of arena
+	}
+
+	if (bp + bp->blk.size == p->blk.next) { // Join to upper
+		bp->blk.size += p->blk.next->blk.size;
+		bp->blk.next = p->blk.next->blk.next;
+	} else {
+		bp->blk.next = p->blk.next;
+	}
+
+	if (p + p->blk.size == bp) { // Join to lower
+		p->blk.size += bp->blk.size;
+		p->blk.next = bp->blk.next;
+	} else {
+		p->blk.next = bp;
+	}
+
+	freep = p;
+}
 
 static Header *morecore(unsigned nu) {
 	char *cp;
@@ -49,6 +83,10 @@ void *malloc(unsigned nbytes) {
 				p->blk.size = nunits;
 			}
 			freep = prevp;
+
+			if (MEM_DEBUG)
+				kprintf(K_DEBUG, "Allocating: %x\n", &p->blk.next);
+			
 			return (void *)(p+1);
 		}
 		if (p == freep) { // Wrapped around the list

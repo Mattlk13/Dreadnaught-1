@@ -6,7 +6,7 @@
 #include "lib/timer.h"
 #include "lib/string.h"
 
-#include "mm/physmem.h"
+#include "mm/blk.h"
 
 static char drive_char = 'a';
 
@@ -75,21 +75,25 @@ static u32int read_ata(struct ata_device *dev, u32int offset, u32int size, u8int
 
 	if (offset % ATA_SECTOR_SIZE) {
 		unsigned int prefix_size = (ATA_SECTOR_SIZE - (offset % ATA_SECTOR_SIZE));
-		char *tmp = (char *)mem_alloc_block();
+		char *tmp = (char *)malloc(ATA_SECTOR_SIZE);
 		ata_device_read_sector(dev, start_block, (u8int *)tmp);
 
 		memcpy(buffer, (void *)((uintptr_t)tmp + (offset % ATA_SECTOR_SIZE)), prefix_size);
 		
+		free(tmp);
+
 		x_offset += prefix_size;
 		start_block++;
 	}
 
 	if ((offset + size) % ATA_SECTOR_SIZE && start_block < end_block) {
 		unsigned int postfix_size = (offset + size) % ATA_SECTOR_SIZE;
-		char *tmp = (char *)mem_alloc_block();
+		char *tmp = (char *)malloc(ATA_SECTOR_SIZE);
 		ata_device_read_sector(dev, end_block, (u8int *)tmp);
 
 		memcpy((void *)((uintptr_t)buffer + size - postfix_size), tmp, postfix_size);
+
+		free(tmp);
 
 		end_block--;
 	}
@@ -170,7 +174,7 @@ static u32int write_ata(struct ata_device *dev, u32int offset, u32int size, u8in
 	if (offset % ATA_SECTOR_SIZE) {
 		unsigned int prefix_size = (ATA_SECTOR_SIZE - (offset % ATA_SECTOR_SIZE));
 
-		char tmp[512];
+		char *tmp = (char *)malloc(ATA_SECTOR_SIZE);
 		ata_device_read_sector(dev, start_block, (u8int *)tmp);
 
 		kprintf(K_INFO, "Writing first block\n");
@@ -178,6 +182,7 @@ static u32int write_ata(struct ata_device *dev, u32int offset, u32int size, u8in
 		memcpy((void *)((uintptr_t)tmp + offset % ATA_SECTOR_SIZE), buffer, prefix_size);
 		ata_device_write_sector_retry(dev, start_block, (u8int *)tmp);
 
+		free(tmp);
 		x_offset += prefix_size;
 		start_block++;
 	}
@@ -185,7 +190,7 @@ static u32int write_ata(struct ata_device *dev, u32int offset, u32int size, u8in
 	if ((offset + size) % ATA_SECTOR_SIZE && start_block < end_block) {
 		unsigned int postfix_size = (offset + size) % ATA_SECTOR_SIZE;
 
-		char tmp[512];
+		char *tmp = (char *)malloc(ATA_SECTOR_SIZE);
 		ata_device_read_sector(dev, end_block, (u8int *)tmp);
 
 		kprintf(K_INFO, "Writing last block\n");
@@ -194,6 +199,7 @@ static u32int write_ata(struct ata_device *dev, u32int offset, u32int size, u8in
 
 		ata_device_write_sector_retry(dev, end_block, (u8int *)tmp);
 
+		free(tmp);
 		end_block--;
 	}
 
@@ -379,7 +385,7 @@ void ide_install() {
 	ata_device_detect(&ata_secondary_slave);
 
 	char myString[] = "Hello world!";
-	char *readStr = (char *)mem_alloc_block();
+	char *readStr = (char *)malloc(strlen(myString)+1);
 	if (write_ata(&ata_secondary_slave, 100, strlen(myString)+1, myString) == strlen(myString)+1) {
 		kprintf(K_OK, "Supposedly successful write\n");
 
@@ -392,4 +398,5 @@ void ide_install() {
 	} else {
 		kprintf(K_ERROR, "Failed write.\n");
 	}
+	free(readStr);
 }
