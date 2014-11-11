@@ -53,7 +53,7 @@ static Header *morecore(unsigned nu) {
 	size_t numBlocks = (nu * sizeof(Header))/PAGE_SIZE;
 	numBlocks += (numBlocks) ? 0 : 1;
 
-	cp = (char *)mem_alloc_blocks(numBlocks);
+	cp = (char *)mem_alloc_blocks(numBlocks); // Grab moar memory
 	if (cp == (char *)0) // No memory left
 		return NULL;
 

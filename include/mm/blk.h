@@ -1,5 +1,12 @@
 // blk.h -- Brad Slayter
 
+/*
+
+	This uses a malloc and free implementation from "The C Programming
+	language" by Brian W. Kernighan and Dennis M. Ritchie
+
+*/
+
 #ifndef BLK_H
 #define BLK_H
 
