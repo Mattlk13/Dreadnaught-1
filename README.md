@@ -16,7 +16,7 @@ Todos:
 - [ ] Load and execute external executables (in progress)
 - [ ] Write multitasking scheduler
 - [x] User mode/non page restricted malloc()
-- [ ] IDE (ATA) driver
+- [x] IDE (ATA) driver
 - [ ] FAT32 File System
 - [ ] Install OS to disk
 - [ ] User Land shell
