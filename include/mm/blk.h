@@ -25,6 +25,7 @@ union header {
 typedef union header Header;
 
 void *malloc(unsigned nbytes);
+void *calloc(size_t n, unsigned size);
 void free(void *ap);
 
 #endif

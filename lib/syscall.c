@@ -11,15 +11,16 @@
 
 //static void syscall_handler(registers_t *regs);
 
-static void *syscalls[6] = {
+static void *syscalls[7] = {
 	&kprintf,
 	&getch,
 	&mon_write,
 	&terminateProcess,
 	&malloc,
-	&free
+	&free,
+	&calloc
 };
-u32int num_syscalls = 6;
+u32int num_syscalls = 7;
 
 DEFN_SYSCALL2(kprintf, 0, int, const char *);
 DEFN_SYSCALL0(getch, 1);
@@ -27,6 +28,7 @@ DEFN_SYSCALL1(mon_write, 2, const char *);
 DEFN_SYSCALL0(terminateProcess, 3);
 DEFN_SYSCALL1(malloc, 4, unsigned);
 DEFN_SYSCALL1(free, 5, void *);
+DEFN_SYSCALL2(calloc, 6, size_t, unsigned);
 
 static void syscall_handler(registers_t *regs) {
 	if (regs->eax >= num_syscalls)

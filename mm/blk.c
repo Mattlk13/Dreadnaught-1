@@ -97,3 +97,7 @@ void *malloc(unsigned nbytes) {
 
 	return NULL; // Something bad happened
 }
+
+void *calloc(size_t n, unsigned size) {
+	return malloc(size*n);
+}
