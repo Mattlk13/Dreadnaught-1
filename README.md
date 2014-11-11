@@ -15,7 +15,7 @@ Todos:
 - [x] System Calls from User Mode
 - [ ] Load and execute external executables (in progress)
 - [ ] Write multitasking scheduler
-- [ ] User mode/non page restricted malloc()
+- [x] User mode/non page restricted malloc()
 - [ ] IDE (ATA) driver
 - [ ] FAT32 File System
 - [ ] Install OS to disk
