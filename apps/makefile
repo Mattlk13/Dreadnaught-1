@@ -1,4 +1,4 @@
-SOURCES := crtbegin.o hello.o syscall.o
+SOURCES := crtbegin.o Calculator.o syscall.o
 
 CC=i686-elf-gcc
 
@@ -10,10 +10,10 @@ ASFLAGS=-felf
 all: $(SOURCES) link
 
 clean:
-	-rm *.o hello.dre
+	-rm *.o Calc.dre
 
 link:
-	i686-elf-gcc $(LDFLAGS) -o hello.dre $(SOURCES)
+	i686-elf-gcc $(LDFLAGS) -o Calc.dre $(SOURCES)
 
 .s.o:
 	nasm $(ASFLAGS) $<

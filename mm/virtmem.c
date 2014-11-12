@@ -173,7 +173,7 @@ void virt_map_phys_addr(pdirectory *dir, u32int virt, u32int phys, u32int flags)
 		virt_create_page_table(dir, virt, flags);
 	((u32int *)(pagedir[virt >> 22] & ~0xFFF))[virt << 10 >> 10 >> 12] = phys | flags;
 
-	kprintf(K_INFO, "Mapped %x to %x with %x flags\n", virt, phys, flags);
+	kprintf(K_INFO, "Mapped %x to %x with %x flags. Value reads %x\n", virt, phys, flags, pagedir[virt >> 22]);
 }
 
 void virt_unmap_page_table(pdirectory *dir, u32int virt) {
@@ -196,8 +196,10 @@ void virt_unmap_phys_addr(pdirectory *dir, u32int virt) {
 
 void *virt_get_phys_addr(pdirectory *dir, u32int virt) {
 	pd_entry *pagedir = dir->m_entries;
-	if (pagedir[virt >> 22] == 0)
+	if (pagedir[virt >> 22] == 0) {
+		kprintf(K_INFO, "Returning 0\n");
 		return 0;
+	}
 	return (void *)((u32int *)(pagedir[virt >> 22] & ~0xFFF))[virt << 10 >> 10 >> 12];
 }
 

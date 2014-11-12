@@ -117,6 +117,8 @@ int exec(char *path, int argc, char **argv, char **env) {
 				pHead = block;
 		}
 
+		proc->physBase = (u32int)pHead;
+
 		memcpy((void *)pHead, (void *)((uintptr_t)header + phdr->p_offset), phdr->p_filesz);
 	}
 
@@ -192,7 +194,10 @@ void terminateProcess() {
 
 		virt = pthread->imageBase + (page * PAGE_SIZE);
 
-		phys = (u32int)virt_get_phys_addr(cur->pageDirectory, virt);
+		//phys = (u32int)virt_get_phys_addr(cur->pageDirectory, virt);
+		phys = cur->physBase + (page * PAGE_SIZE);
+
+		kprintf(K_INFO, "Freeing %x\n", phys);
 
 		virt_unmap_phys_addr(cur->pageDirectory, virt);
 		mem_free_block((void *)phys);

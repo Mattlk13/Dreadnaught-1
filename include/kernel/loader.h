@@ -160,6 +160,7 @@ typedef struct _process {
 	thread threads[MAX_THREAD];
 	int threadCount;
 	image_t image;
+	u32int physBase;
 }  process;
 
 // Process execution functions
