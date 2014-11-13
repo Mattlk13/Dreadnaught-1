@@ -14,7 +14,13 @@ typedef struct _FILE {
 	u32int position;
 	u32int currentCluster;
 	u32int deviceID;
+	u32int inode;
+	void *device;
 } FILE, *PFILE;
+
+typedef struct fs_node {
+
+} fs_node_t;
 
 typedef enum _FLAGS {
 	F_WRITE = 0,

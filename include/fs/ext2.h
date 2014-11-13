@@ -143,7 +143,7 @@ struct ext2_dir {
 	char name;
 } __attribute__ ((packed));
 
-typedef ext2_dir ext2_dir_t;
+typedef struct ext2_dir ext2_dir_t;
 
 typedef struct {
 	u32int block_no;
@@ -153,5 +153,7 @@ typedef struct {
 } ext2_disk_cache_entry_t;
 
 typedef int (*ext2_block_io_t) (void *, u32int, u8int *);
+
+void ext2_initialize();
 
 #endif

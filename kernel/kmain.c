@@ -85,6 +85,7 @@ int kmain(multiboot_info_t *bootinfo) {
 	
 	ide_install();
 	kprintf(K_OK, "HDD installed\n");
+	ext2_initialize();
 
 	initialize_syscalls();
 	start_cmd_prompt();

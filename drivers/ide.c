@@ -384,7 +384,7 @@ void ide_install() {
 	ata_device_detect(&ata_secondary_master);
 	ata_device_detect(&ata_secondary_slave);
 
-	char myString[] = "Hello world!";
+	/*char myString[] = "Hello world!";
 	char *readStr = (char *)malloc(strlen(myString)+1);
 	if (write_ata(&ata_secondary_slave, 100, strlen(myString)+1, myString) == strlen(myString)+1) {
 		kprintf(K_OK, "Supposedly successful write\n");
@@ -398,5 +398,5 @@ void ide_install() {
 	} else {
 		kprintf(K_ERROR, "Failed write.\n");
 	}
-	free(readStr);
+	free(readStr);*/
 }
