@@ -20,10 +20,41 @@ process *get_current_process() {
 	return &_proc;
 }
 
+void map_kernel_space(pdirectory *address_space) {
+	u32int virtual_addr;
+	u32int phys_addr;
+
+	int flags = PTE_PRESENT|PTE_WRITABLE;
+
+	virt_map_phys_addr(address_space, 0x8000, 0x8000, flags);
+	virt_map_phys_addr(address_space, 0x9000, 0x9000, flags);
+
+	virtual_addr = 0xC0000000;
+	phys_addr = 0x10000;
+	for (u32int i = 0; i < 10; i++) {
+		virt_map_phys_addr(address_space, virtual_addr+(i * PAGE_SIZE), phys_addr + (i * PAGE_SIZE), flags);
+	}
+
+	virtual_addr = 0xA0000;
+	phys_addr = 0xA0000;
+	for (u32int i = 0; i < 31; i++) {
+		virt_map_phys_addr(address_space, virtual_addr+(i*PAGE_SIZE), phys_addr+(i*PAGE_SIZE), flags);
+	}
+
+	virt_map_phys_addr(address_space, (u32int)address_space, (u32int)address_space, PTE_PRESENT|PTE_WRITABLE);
+}
+
 int exec(char *path, int argc, char **argv, char **env) {
 	FILE exe = vol_open_file(path, F_READ);
 	Elf32_Header *header;
 	pdirectory *address_space = virt_get_directory();
+	//pdirectory *address_space = virt_create_addr_space();
+	if (!address_space) {
+		vol_close_file(&exe);
+		return 0;
+	}
+	//map_kernel_space(address_space);
+
 	process *proc;
 	thread *mainThread;
 

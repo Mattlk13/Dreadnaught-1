@@ -4,8 +4,11 @@
 #include "fs/vfs.h"
 
 #include "lib/stdio.h"
+#include "lib/string.h"
 
 #include "drivers/ide.h"
+
+#include "mm/blk.h"
 
 #define EXT2_BGD_BLOCK 2
 
@@ -14,12 +17,12 @@
 #define E_NOSPACE 	2
 #define E_BADPARENT 3
 
-FILESYSYEM fSysExt2;
+FILESYSTEM fSysExt2;
 
 typedef struct {
 	ext2_superblock_t *superblock;
 	ext2_bgdescriptor_t *block_groups;
-	FILE *rootNode;
+	FILE *root_node;
 
 	struct ata_device *block_device;
 
@@ -250,7 +253,7 @@ static unsigned int get_block_number(ext2_fs_t *this, ext2_inodetable_t *inode, 
 		return ((u32int *)&tmp)[g];
 	}
 
-	kprintf(K_ERROR, "[EXT2] Driver tried to read a block number that was too high (%d)\n", rblock);
+	kprintf(K_ERROR, "[EXT2] Driver tried to read a block number that was too high (%d)\n", iblock);
 	return 0;
 }
 
@@ -307,7 +310,7 @@ static int allocate_inode_block(ext2_fs_t *this, ext2_inodetable_t *inode, unsig
 	set_block_number(this, inode, block, block_no);
 
 	BGD[group].free_blocks_count--;
-	write_block(this, inode, block, block_no);
+	write_block(this, EXT2_BGD_BLOCK, (u8int *)BGD);
 
 	inode->blocks++;
 	write_inode(this, inode, inode_no);
@@ -540,7 +543,7 @@ static u32int ext2_root(ext2_fs_t *this, ext2_inodetable_t *inode, FILE *fnode) 
 	fnode->name[0] = '/';
 	fnode->name[1] = '\0';
 
-	fnode->length = inode->size;
+	fnode->fileLength = inode->size;
 
 	return 1;
 }
@@ -552,7 +555,7 @@ static void mount_ext2() {
 
 	memset(this, 0x00, sizeof(ext2_fs_t));
 
-	this->block_device = ata_secondary_slave;
+	this->block_device = &ata_secondary_slave;
 	this->block_size = 1024;
 
 	SB = malloc(this->block_size);
