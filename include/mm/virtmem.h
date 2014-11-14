@@ -53,5 +53,6 @@ void virt_unmap_page_table(pdirectory *dir, u32int virt);
 void virt_unmap_phys_addr(pdirectory *dir, u32int virt);
 pdirectory *virt_create_addr_space();
 void *virt_get_phys_addr(pdirectory *dir, u32int virt);
+pdirectory *virt_clone_directory(pdirectory *src);
 
 #endif

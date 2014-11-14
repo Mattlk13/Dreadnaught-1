@@ -14,6 +14,7 @@
 #define PAGE_SIZE 4096 // pages are 4k
 
 pdirectory *cur_directory = 0;
+pdirectory *kernel_directory = 0;
 physical_addr cur_pdbr = 0; // page dir base register
 
 inline pt_entry *virt_ptable_lookup_entry(ptable *p, virtual_addr addr) {
@@ -51,6 +52,7 @@ inline u8int virt_switch_pdirectory(pdirectory *dir) {
 		return 0;
 
 	cur_directory = dir;
+	cur_pdbr = (physical_addr)&dir->m_entries;
 	mem_load_PDBR(cur_pdbr);
 	return 1;
 }
@@ -76,25 +78,6 @@ u8int virt_alloc_page(pt_entry *e) {
 
 	return 1;
 }
-
-/*pt_entry *virt_get_page(u32int addr, int make, pdirectory *dir) {
-	addr /= 0x1000; // = 4096 bytes
-	u32int idx = addr / 1024;
-	if (dir->m_entries[idx]) {
-		pd_entry *table = &dir->m_entries[idx];
-		return &table->m_entries[addr % 1024];
-	} else if (make) {
-		dir->m_entries[idx] = (pd_entry *)mem_alloc_block();
-		memset(dir->m_entries[idx], 0, sizeof(pd_entry));
-		pd_entry_add_attrib(dir->m_entries[idx], PDE_PRESENT);
-		pd_entry_add_attrib(dir->m_entries[idx], PDE_WRITABLE);
-		pd_entry_add_attrib(dir->m_entries[idx], PDE_USER);
-		pd_entry *table = &dir->m_entries[idx];
-		return &table->m_entries[addr % 1024];
-	} else {
-		return 0;
-	}
-}*/
 
 void virt_free_page(pt_entry *e) {
 	void *p = (void *)pt_entry_pfn(*e);
@@ -216,6 +199,28 @@ pdirectory *virt_create_addr_space() {
 	return dir;
 }
 
+pdirectory *virt_clone_directory(pdirectory *src) {
+	pdirectory *dir = (pdirectory *)mem_alloc_block();
+
+	memset(dir, 0, sizeof(pdirectory));
+
+	u32int phys = (physical_addr)&dir->m_entries;
+
+	for (int i = 0; i < 1024; i++) {
+		if (!src->m_entries[i])
+			continue;
+
+		if (kernel_directory->m_entries[i] == src->m_entries[i]) {
+			dir->m_entries[i] = src->m_entries[i];
+		} else {
+			// copy the table
+			dir->m_entries[i] = src->m_entries[i];
+		}
+	}
+
+	return dir;
+}
+
 void page_fault(registers_t *regs) {
 	u32int fault_addr;
 	asm("mov %%cr2, %0" : "=r"(fault_addr));
@@ -286,6 +291,8 @@ void virt_init() {
 	// register page fault handler
 	register_interrupt_handler(14, page_fault);
 
+	kernel_directory = dir;
+	dir = virt_clone_directory(kernel_directory);
 	virt_switch_pdirectory(dir);
 
 	kprintf(K_INFO, "Enable paging\n");

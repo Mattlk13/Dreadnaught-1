@@ -3,6 +3,7 @@
 #include "lib/timer.h"
 
 #include "kernel/isr.h"
+#include "kernel/task.h"
 
 #include "io/monitor.h"
 
@@ -10,6 +11,7 @@ u32int tick = 0;
 
 static void timer_callback(registers_t *regs) {
 	tick++;
+	task_switch();
 }
 
 void init_timer(u32int freq) {
