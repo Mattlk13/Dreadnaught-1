@@ -13,9 +13,10 @@ Todos:
 - [ ] Write to Floppy (in progress)
 - [x] Jump to User Mode
 - [x] System Calls from User Mode
-- [ ] Load and execute external executables (in progress)
+- [x] Load and execute external executables
 - [ ] Write multitasking scheduler
-- [x] User mode/non page restricted malloc()
+- [x] Non page restricted kernel mode malloc()
+- [ ] User mode malloc()
 - [x] IDE (ATA) driver
 - [ ] FAT32 File System
 - [ ] Install OS to disk
