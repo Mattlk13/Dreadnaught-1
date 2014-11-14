@@ -13,7 +13,7 @@ Todos:
 - [ ] Write to Floppy (in progress)
 - [x] Jump to User Mode
 - [x] System Calls from User Mode
-- [x] Load and execute external executables (in progress)
+- [x] Load and execute external executables
 - [ ] Write multitasking scheduler
 - [x] Non page restricted kernel mode malloc()
 - [ ] User mode malloc()
