@@ -2,15 +2,23 @@
 
 #include "kernel/task.h"
 #include "mm/blk.h"
+#include "lib/stdio.h"
 
 volatile task_t *current_task;
 volatile task_t *ready_queue;
 
 extern pdirectory *kernel_directory;
-extern pdirectory *current_directory;
+extern pdirectory *cur_directory;
 extern u32int read_eip();
 
 u32int next_pid = 1;
+
+int getpid() {
+	if (current_task)
+		return current_task->id;
+	else
+		return -1;
+}
 
 void initialize_tasking() {
 	asm volatile("cli");
@@ -19,7 +27,7 @@ void initialize_tasking() {
 	current_task->id = next_pid++;
 	current_task->esp = current_task->ebp = 0;
 	current_task->eip = 0;
-	current_task->page_directory = current_directory;
+	current_task->page_directory = cur_directory;
 	current_task->next = 0;
 
 	asm volatile("sti");
@@ -30,7 +38,7 @@ int fork() {
 
 	task_t *parent_task = (task_t *)current_task;
 
-	pdirectory *directory = virt_clone_directory(current_directory);
+	pdirectory *directory = virt_clone_directory(cur_directory);
 
 	task_t *new_task = (task_t *)malloc(sizeof(task_t));
 	new_task->id = next_pid++;
@@ -62,7 +70,11 @@ int fork() {
 	}
 }
 
-void switch_task() {
+void task_switch() {
+	if (!current_task)
+		return;
+
+	kprintf(K_DEBUG, "Switching task!\n");
 	u32int esp, ebp, eip;
 	asm volatile("mov %%esp, %0" : "=r"(esp));
 	asm volatile("mov %%ebp, %0" : "=r"(ebp));
@@ -81,14 +93,16 @@ void switch_task() {
 	esp = current_task->esp;
 	ebp = current_task->ebp;
 
+	//kprintf(K_DEBUG, "Lets do the do!\n");
 	asm volatile(" \
 		cli; \
-		mov %0, %%ecx; \
+		mov %0, %%ebx; \
 		mov %1, %%esp; \
 		mov %2, %%ebp; \
 		mov %3, %%cr3; \
 		mov $0x12345, %%eax; \
 		sti; \
-		jmp *%%ecx; \
-		" : : "r"(eip), "r"(esp), "r"(ebp), "r"((physical_addr)&current_directory->m_entries));
+		jmp *%%ebx; \
+		" : : "r"(eip), "r"(esp), "r"(ebp), "r"((physical_addr)&cur_directory->m_entries)
+		  : "%ebx", "%esp", "%eax");
 }

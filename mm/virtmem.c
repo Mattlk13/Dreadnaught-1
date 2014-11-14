@@ -199,6 +199,30 @@ pdirectory *virt_create_addr_space() {
 	return dir;
 }
 
+ptable *virt_clone_table(pd_entry *src) {
+	ptable *table = (ptable *)mem_alloc_block();
+	ptable *srcTable = (ptable *)PAGE_GET_PHYSICAL_ADDRESS(src);
+
+	memset(table, 0, sizeof(ptable));
+
+	for (int i = 0; i < 1024; i++) {
+		if (!srcTable->m_entries[i])
+			continue;
+
+		pt_entry page = 0;
+
+		if (pt_entry_is_present(srcTable->m_entries[i])) pt_entry_add_attrib(&page, PTE_PRESENT);
+		if (pt_entry_is_writable(srcTable->m_entries[i])) pt_entry_add_attrib(&page, PTE_WRITABLE);
+		if (pt_entry_is_user(srcTable->m_entries[i])) pt_entry_add_attrib(&page, PTE_USER);
+		if (pt_entry_is_accessed(srcTable->m_entries[i])) pt_entry_add_attrib(&page, PTE_ACCESSED);
+		if (pt_entry_is_dirty(srcTable->m_entries[i])) pt_entry_add_attrib(&page, PTE_DIRTY);
+
+		pt_entry_set_frame(&page, pt_entry_pfn(srcTable->m_entries[i]));
+	}
+
+	return table;
+}
+
 pdirectory *virt_clone_directory(pdirectory *src) {
 	pdirectory *dir = (pdirectory *)mem_alloc_block();
 
@@ -214,7 +238,19 @@ pdirectory *virt_clone_directory(pdirectory *src) {
 			dir->m_entries[i] = src->m_entries[i];
 		} else {
 			// copy the table
-			dir->m_entries[i] = src->m_entries[i];
+			ptable *table = virt_clone_table(&src->m_entries[i]);
+
+			pd_entry *entry = (pd_entry *)&dir->m_entries[i];
+			pd_entry *srcTable = (pd_entry *)&src->m_entries[i];
+
+			if (pd_entry_is_present(src->m_entries[i]))  pd_entry_add_attrib(srcTable, PDE_PRESENT);
+			if (pd_entry_is_writable(src->m_entries[i])) pd_entry_add_attrib(srcTable, PDE_WRITABLE);
+			if (pd_entry_is_user(src->m_entries[i])) 	  pd_entry_add_attrib(srcTable, PDE_USER);
+			if (pd_entry_is_accessed(src->m_entries[i])) pd_entry_add_attrib(srcTable, PDE_ACCESSED);
+			if (pd_entry_is_dirty(src->m_entries[i]))    pd_entry_add_attrib(srcTable, PDE_DIRTY);
+
+			//dir->m_entries[i] = src->m_entries[i];
+			pd_entry_set_frame(entry, (physical_addr)table);
 		}
 	}
 

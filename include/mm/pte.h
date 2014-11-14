@@ -27,6 +27,9 @@ void pt_entry_del_attrib(pt_entry *e, u32int attrib);
 void pt_entry_set_frame(pt_entry *e, u32int addr);
 u8int pt_entry_is_present(pt_entry e);
 u8int pt_entry_is_writable(pt_entry e);
+u8int pt_entry_is_user(pt_entry e);
+u8int pt_entry_is_accessed(pt_entry e);
+u8int pt_entry_is_dirty(pt_entry e);
 u32int pt_entry_pfn(pt_entry e);
 
 #endif

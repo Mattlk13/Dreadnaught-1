@@ -30,6 +30,14 @@ inline u8int pd_entry_is_user(pd_entry e) {
 	return e & PDE_USER;
 }
 
+inline u8int pd_entry_is_accessed(pd_entry e) {
+	return e & PDE_ACCESSED;
+}
+
+inline u8int pd_entry_is_dirty(pd_entry e) {
+	return e & PDE_DIRTY;
+}
+
 inline u8int pd_entry_is_4mb(pd_entry e) {
 	return e & PDE_4MB;
 }

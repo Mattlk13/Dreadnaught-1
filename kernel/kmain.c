@@ -11,6 +11,7 @@
 #include "kernel/descriptor_tables.h"
 #include "kernel/cmd.h"
 #include "kernel/Exception.h"
+#include "kernel/task.h"
 
 #include "mm/physmem.h"
 #include "mm/virtmem.h"
@@ -72,24 +73,35 @@ int kmain(multiboot_info_t *bootinfo) {
 
 	init_timer(100);
 
-	kb_install_kb();
+	initialize_tasking();
+	kprintf(K_OK, "Tasking initialized. We are pid %d\n", getpid());
 
-	// FLOPPY
-	if (detect_floppy_drive()) {
-		kprintf(K_INFO, "Floppy drive detected. Installing FDC.\n");
-		flpy_set_working_drive(0);
-		flpy_install(38);
-		fsys_fat_initialize();
-		kprintf(K_OK, "File system mounted\n");
+	int p = fork();
+
+	if (p == 0) {
+		kprintf(K_INFO, "=== PID %d started ===\n", getpid());
+
+		// FLOPPY
+		if (detect_floppy_drive()) {
+			kprintf(K_INFO, "Floppy drive detected. Installing FDC.\n");
+			flpy_set_working_drive(0);
+			flpy_install(38);
+			fsys_fat_initialize();
+			kprintf(K_OK, "File system mounted\n");
+		}
+
+		kb_install_kb();
+		start_cmd_prompt();
+	} else {
+		kprintf(K_INFO, "=== PID %d continuing ===\n", getpid());
+
+		ide_install();
+		kprintf(K_OK, "HDD installed\n");
+		//ext2_initialize();
+		char *block = (char *)malloc(4);
+
+		initialize_syscalls();
 	}
-	
-	ide_install();
-	kprintf(K_OK, "HDD installed\n");
-	//ext2_initialize();
-	char *block = (char *)malloc(4);
-
-	initialize_syscalls();
-	start_cmd_prompt();
 
 	return 0xDEADBEEF;
 }

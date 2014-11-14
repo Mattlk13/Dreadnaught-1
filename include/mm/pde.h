@@ -29,6 +29,8 @@ u8int pd_entry_is_present(pd_entry e);
 u8int pd_entry_is_user(pd_entry e);
 u8int pd_entry_is_4mb(pd_entry e);
 u8int pd_entry_is_writable(pd_entry e);
+u8int pd_entry_is_accessed(pd_entry e);
+u8int pd_entry_is_dirty(pd_entry e);
 u32int pd_entry_pfn(pd_entry e);
 void pd_entry_enable_global(pd_entry e);
 
