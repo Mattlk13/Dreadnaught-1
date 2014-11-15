@@ -76,32 +76,33 @@ int kmain(multiboot_info_t *bootinfo) {
 	initialize_tasking();
 	kprintf(K_OK, "Tasking initialized. We are pid %d\n", getpid());
 
-	int p = fork();
-
-	if (p == 0) {
-		kprintf(K_INFO, "=== PID %d started ===\n", getpid());
-
-		// FLOPPY
-		if (detect_floppy_drive()) {
-			kprintf(K_INFO, "Floppy drive detected. Installing FDC.\n");
-			flpy_set_working_drive(0);
-			flpy_install(38);
-			fsys_fat_initialize();
-			kprintf(K_OK, "File system mounted\n");
-		}
-
-		kb_install_kb();
-		start_cmd_prompt();
-	} else {
-		kprintf(K_INFO, "=== PID %d continuing ===\n", getpid());
-
-		ide_install();
-		kprintf(K_OK, "HDD installed\n");
-		//ext2_initialize();
-		char *block = (char *)malloc(4);
-
-		initialize_syscalls();
+	// FLOPPY
+	if (detect_floppy_drive()) {
+		kprintf(K_INFO, "Floppy drive detected. Installing FDC.\n");
+		flpy_set_working_drive(0);
+		flpy_install(38);
+		fsys_fat_initialize();
+		kprintf(K_OK, "File system mounted\n");
 	}
+
+	ide_install();
+	kprintf(K_OK, "HDD installed\n");
+	//ext2_initialize();
+	char *block = (char *)malloc(4);
+	initialize_syscalls();
+
+	kb_install_kb();
+
+	int i = fork();
+	if (i == 0) {
+		kprintf(K_INFO, "We are %d :D\n", getpid());
+		//for (;;);
+	} else {
+		kprintf(K_INFO, "We are %d :D\n", getpid());
+		//start_cmd_prompt();
+	}
+
+	for (;;);
 
 	return 0xDEADBEEF;
 }

@@ -1,6 +1,7 @@
 // task.c -- Brad Slayter
 
 #include "kernel/task.h"
+#include "kernel/loader.h"
 #include "mm/blk.h"
 #include "lib/stdio.h"
 
@@ -38,10 +39,13 @@ int fork() {
 
 	task_t *parent_task = (task_t *)current_task;
 
-	pdirectory *directory = virt_clone_directory(cur_directory);
+	//pdirectory *directory = virt_clone_directory(cur_directory);
+	pdirectory *directory = virt_create_addr_space();
+	//map_kernel_space(directory);
 
 	task_t *new_task = (task_t *)malloc(sizeof(task_t));
 	new_task->id = next_pid++;
+	kprintf(K_DEBUG, "Creating task %d\n", new_task->id);
 	new_task->esp = new_task->ebp = 0;
 	new_task->eip = 0;
 	new_task->page_directory = directory;
@@ -74,7 +78,7 @@ void task_switch() {
 	if (!current_task)
 		return;
 
-	kprintf(K_DEBUG, "Switching task!\n");
+	//kprintf(K_DEBUG, "Switching task!\n");
 	u32int esp, ebp, eip;
 	asm volatile("mov %%esp, %0" : "=r"(esp));
 	asm volatile("mov %%ebp, %0" : "=r"(ebp));
@@ -92,7 +96,9 @@ void task_switch() {
 
 	esp = current_task->esp;
 	ebp = current_task->ebp;
+	cur_directory = current_task->page_directory;
 
+	//kprintf(K_DEBUG, "New Page Dir at %x\n", (physical_addr)&cur_directory->m_entries);
 	//kprintf(K_DEBUG, "Lets do the do!\n");
 	asm volatile(" \
 		cli; \
@@ -103,6 +109,6 @@ void task_switch() {
 		mov $0x12345, %%eax; \
 		sti; \
 		jmp *%%ebx; \
-		" : : "r"(eip), "r"(esp), "r"(ebp), "r"((physical_addr)&cur_directory->m_entries)
+		" : : "r"(eip), "r"(esp), "r"(ebp), "r"((physical_addr)cur_directory)
 		  : "%ebx", "%esp", "%eax");
 }

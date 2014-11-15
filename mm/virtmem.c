@@ -196,6 +196,7 @@ pdirectory *virt_create_addr_space() {
 
 	// clear dir (mark all tables as not present)
 	memset(dir, 0, sizeof(pdirectory));
+	memcpy(dir->m_entries, cur_directory->m_entries, sizeof(u32int)*1024);
 	return dir;
 }
 
@@ -251,6 +252,7 @@ pdirectory *virt_clone_directory(pdirectory *src) {
 
 			//dir->m_entries[i] = src->m_entries[i];
 			pd_entry_set_frame(entry, (physical_addr)table);
+			kprintf(K_DEBUG, "Table at %x\n", (physical_addr)entry);
 		}
 	}
 

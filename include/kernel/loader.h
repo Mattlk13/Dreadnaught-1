@@ -167,5 +167,6 @@ typedef struct _process {
 int exec(char *path, int argc, char **argv, char **env);
 int system(char *path, int argc, char **argv);
 void terminateProcess();
+void map_kernel_space(pdirectory *address_space);
 
 #endif
