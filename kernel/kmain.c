@@ -73,8 +73,7 @@ int kmain(multiboot_info_t *bootinfo) {
 
 	init_timer(100);
 
-	initialize_tasking();
-	kprintf(K_OK, "Tasking initialized. We are pid %d\n", getpid());
+	kprintf(K_OK, "Tasking initialized. We are pid\n");
 
 	// FLOPPY
 	if (detect_floppy_drive()) {
@@ -93,14 +92,8 @@ int kmain(multiboot_info_t *bootinfo) {
 
 	kb_install_kb();
 
-	int i = fork();
-	if (i == 0) {
-		kprintf(K_INFO, "We are %d :D\n", getpid());
-		//for (;;);
-	} else {
-		kprintf(K_INFO, "We are %d :D\n", getpid());
-		//start_cmd_prompt();
-	}
+	initialize_tasking();
+	//start_cmd_prompt();
 
 	for (;;);
 

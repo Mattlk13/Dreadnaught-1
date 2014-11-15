@@ -11,8 +11,8 @@ u32int tick = 0;
 
 static void timer_callback(registers_t *regs) {
 	tick++;
-	if (tick % 10 == 0)
-		task_switch();
+	//if (tick % 10 == 0)
+	//	task_switch();
 }
 
 void init_timer(u32int freq) {

@@ -10,6 +10,7 @@ void div_by_zero(registers_t *regs) {
 }
 
 void single_step_trap(registers_t *regs) {
+	kprintf(K_ERROR, "eflags: %x\n", regs->eflags);
 	PANIC("Single Step Trap");
 }
 

@@ -6,17 +6,17 @@
 #include "lib/common.h"
 #include "mm/virtmem.h"
 
-typedef struct task {
-	int id;
-	u32int esp, ebp;
-	u32int eip;
-	pdirectory *page_directory;
-	struct task *next;
+typedef struct Registers {
+	u32int eax, ebx, ecx, edx, esi, edi, esp, ebp, eip, eflags, cr3;
+} Registers_t;
+
+typedef struct Task {
+	Registers_t regs;
+	struct Task *next;
 } task_t;
 
+extern void preempt();
+extern void switch_task(Registers_t *old, Registers_t *new);
 void initialize_tasking();
-void task_switch();
-int fork();
-int getpid();
 
 #endif
