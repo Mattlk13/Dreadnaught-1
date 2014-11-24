@@ -3,6 +3,7 @@
 #include "kernel/task.h"
 #include "kernel/loader.h"
 #include "mm/blk.h"
+#include "mm/physmem.h"
 #include "lib/stdio.h"
 
 static task_t *running_task;
@@ -36,6 +37,7 @@ void create_task(task_t *task, void (*main)(), u32int flags, u32int *pagedir) {
 	task->regs.eflags = flags;
 	task->regs.eip = (u32int)main;
 	task->regs.cr3 = (u32int)pagedir;
+	task->regs.esp = (u32int)mem_alloc_block() + 0x1000;
 	task->next = NULL;
 }
 

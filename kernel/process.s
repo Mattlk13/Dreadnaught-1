@@ -11,7 +11,7 @@ switch_task:
 	pushf
 	mov eax, cr3
 	push eax
-	mov eax, [esp+48]
+	mov eax, [esp+44]
 	mov [eax+4],  ebx
 	mov [eax+8],  ecx
 	mov [eax+12], edx
@@ -20,6 +20,7 @@ switch_task:
 	mov ebx, [esp+36]
 	mov ecx, [esp+40]
 	mov edx, [esp+20]
+	add edx, 4
 	mov esi, [esp+16]
 	mov edi, [esp+4]
 	mov [eax], ebx
@@ -30,24 +31,24 @@ switch_task:
 	pop ebx
 	mov [eax+40], ebx
 	push ebx
-	mov eax, [esp+44]
-	mov eax, [eax]
+	mov eax, [esp+48]
 	mov ebx, [eax+4]
 	mov ecx, [eax+8]
 	mov edx, [eax+12]
 	mov esi, [eax+16]
 	mov edi, [eax+20]
-	mov ebp, [eax+24]
+	mov ebp, [eax+28]
 	push eax
-	mov eax, [eax+40]
+	mov eax, [eax+36]
 	push eax
 	popf
 	pop eax
 	mov esp, [eax+24]
 	push eax
-	mov eax, [eax+40]
+	mov eax, [eax+44]
 	mov cr3, eax
 	pop eax
 	mov eax, [eax+32]
-	push eax
+	xchg eax, [esp]
+	mov eax, [eax]
 	ret
