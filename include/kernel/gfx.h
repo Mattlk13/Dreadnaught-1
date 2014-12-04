@@ -5,6 +5,12 @@
 
 #include "lib/common.h"
 
+typedef struct {
+	u8int height;
+	u8int width;
+	char *data;
+} BITMAP;
+
 void go_gfx();
 
 #endif

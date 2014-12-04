@@ -1,5 +1,6 @@
 #include "kernel/gfx.h"
 #include "mm/physmem.h"
+#include "mm/blk.h"
 #include "lib/stdio.h"
 
 // define our structure
@@ -46,6 +47,14 @@ void draw_rect(unsigned char x, unsigned char y, unsigned char w, unsigned char 
 	}
 }
 
+void draw_bitmap(BITMAP bmp, u8int x, u8int y) {
+	for (int i = y; i < y+bmp.height; i++) {
+		for (int j = 0; j < bmp.width; j++) {
+			memset((char *)0xA0000 + (i*320+(x+j)), bmp.data[i*bmp.height+j], 1);
+		}
+	}
+}
+
 void go_text() {
 	mem_enable_paging(0);
     int32_text();
@@ -62,6 +71,18 @@ void draw() {
     // draw horizontal line from 100,80 to 100,240 in multiple colors
     /*for(int y = 50; y < 150; y++)
         memset((char *)0xA0000 + (y*320+80), y, 160);*/
+
+    BITMAP bmp;
+    bmp.height = 4;
+    bmp.width = 5;
+
+    char data[20];
+    data[0] = data[2] = data[4] = data[5] = data[7] = data[9] = data[11] = data[12] = data[13] = data[15] = data[19] = 0;
+    data[1] = data[3] = data[6] = data[8] = data[10] = data[14] = data[16] = data[17] = data[18] = 4;
+    bmp.data = (char *)malloc(20);
+    memcpy(bmp.data, data, 20);
+    draw_bitmap(bmp, 20, 20);
+
     getch();
     go_text();
 }
