@@ -12,6 +12,7 @@
 #include "kernel/cmd.h"
 #include "kernel/Exception.h"
 #include "kernel/task.h"
+#include "kernel/gfx.h"
 
 #include "mm/physmem.h"
 #include "mm/virtmem.h"
@@ -22,6 +23,7 @@
 #include "drivers/ide.h"
 
 #include "fs/fat12.h"
+#include "fs/ext2.h"
 
 typedef struct memory_region_struct {
 	u32int	startLo;	//base address
@@ -87,20 +89,21 @@ int kmain(multiboot_info_t *bootinfo) {
 
 	ide_install();
 	kprintf(K_OK, "HDD installed\n");
-	//ext2_initialize();
-	char *block = (char *)malloc(4);
+	ext2_initialize();
 	initialize_syscalls();
 
 	kb_install_kb();
 
-	int i = fork();
+	/*int i = fork();
 	if (i == 0) {
-		kprintf(K_INFO, "We are %d :D\n", getpid());
-		//for (;;);
+		kprintf(K_OK, "We are %d\n", getpid());
 	} else {
-		kprintf(K_INFO, "We are %d :D\n", getpid());
-		//start_cmd_prompt();
-	}
+		kprintf(K_OK, "We are %d\n", getpid());
+	}*/
+
+	go_gfx();
+
+	//start_cmd_prompt();
 
 	for (;;);
 

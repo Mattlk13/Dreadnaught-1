@@ -146,8 +146,7 @@ struct ata_device {
 };
 
 void ide_install();
-struct ata_device *getHDD();
-static u32int write_ata(struct ata_device *dev, u32int offset, u32int size, u8int *buffer);
-static u32int read_ata(struct ata_device *dev, u32int offset, u32int size, u8int *buffer);
+u32int write_ata(struct ata_device *dev, u32int offset, u32int size, u8int *buffer);
+u32int read_ata(struct ata_device *dev, u32int offset, u32int size, u8int *buffer);
 
 #endif

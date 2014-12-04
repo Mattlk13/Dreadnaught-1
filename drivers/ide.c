@@ -59,7 +59,7 @@ try_again:
 	// TODO: unlock
 }
 
-static u32int read_ata(struct ata_device *dev, u32int offset, u32int size, u8int *buffer) {
+u32int read_ata(struct ata_device *dev, u32int offset, u32int size, u8int *buffer) {
 	unsigned int start_block = offset / ATA_SECTOR_SIZE;
 	unsigned int end_block = (offset + size - 1) / ATA_SECTOR_SIZE;
 
@@ -157,7 +157,7 @@ static void ata_device_write_sector_retry(struct ata_device *dev, u32int lba, u8
 	asm volatile("sti");
 }
 
-static u32int write_ata(struct ata_device *dev, u32int offset, u32int size, u8int *buffer) {
+u32int write_ata(struct ata_device *dev, u32int offset, u32int size, u8int *buffer) {
 	unsigned int start_block = offset / ATA_SECTOR_SIZE;
 	unsigned int end_block = (offset + size - 1) / ATA_SECTOR_SIZE;
 

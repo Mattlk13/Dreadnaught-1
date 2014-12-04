@@ -40,7 +40,7 @@ int fork() {
 	task_t *parent_task = (task_t *)current_task;
 
 	//pdirectory *directory = virt_clone_directory(cur_directory);
-	pdirectory *directory = virt_create_addr_space();
+	//pdirectory *directory = virt_create_addr_space();
 	//map_kernel_space(directory);
 
 	task_t *new_task = (task_t *)malloc(sizeof(task_t));
@@ -48,7 +48,7 @@ int fork() {
 	kprintf(K_DEBUG, "Creating task %d\n", new_task->id);
 	new_task->esp = new_task->ebp = 0;
 	new_task->eip = 0;
-	new_task->page_directory = directory;
+	new_task->page_directory = cur_directory;
 	new_task->next = 0;
 
 	task_t *tmp_task = (task_t *)ready_queue;
@@ -109,6 +109,6 @@ void task_switch() {
 		mov $0x12345, %%eax; \
 		sti; \
 		jmp *%%ebx; \
-		" : : "r"(eip), "r"(esp), "r"(ebp), "r"((physical_addr)cur_directory)
+		" : : "r"(eip), "r"(esp), "r"(ebp), "r"((physical_addr)&cur_directory->m_entries)
 		  : "%ebx", "%esp", "%eax");
 }

@@ -467,9 +467,10 @@ static ext2_inodetable_t *read_inode(ext2_fs_t *this, u32int inode) {
 	return inodet;
 }
 
-static u32int read_ext2(FILE *node, u32int offset, u32int size, u8int *buffer) {
+static void read_ext2(FILE *node, u8int *buffer, u32int size) {
 	ext2_fs_t *this = node->device;
 	ext2_inodetable_t *inode = read_inode(this, node->inode);
+	u32int offset = node->position;
 
 	u32int end;
 	if (offset + size > inode->size) {
@@ -490,7 +491,8 @@ static u32int read_ext2(FILE *node, u32int offset, u32int size, u8int *buffer) {
 		inode_read_block(this, inode, node->inode, start_block, buf);
 		memcpy(buffer, (u8int *)(((u32int)buf) + (offset % this->block_size)), size_to_read);
 		free(inode);
-		return size_to_read;
+		node->position += size_to_read;
+		//return size_to_read;
 	} else {
 		u32int block_offset;
 		u32int blocks_read = 0;
@@ -508,11 +510,13 @@ static u32int read_ext2(FILE *node, u32int offset, u32int size, u8int *buffer) {
 		memcpy(buffer + this->block_size * blocks_read - (offset % this->block_size), buf, end_size);
 	}
 	free(inode);
-	return size_to_read;
+	node->position += size_to_read;
+	//return size_to_read;
 }
 
-static void open_ext2(FILE *node, unsigned int flags) {
-
+FILE open_ext2(const char *fname, int flags) {
+	FILE nullFile;
+	return nullFile;
 }
 
 static void close_ext2(FILE *node) {
@@ -560,7 +564,7 @@ static void mount_ext2() {
 
 	SB = malloc(this->block_size);
 
-	kprintf(K_INFO, "Reading superblock...");
+	kprintf(K_INFO, "Reading superblock...\n");
 	read_block(this, 1, (u8int *)SB);
 	if (SB->magic != EXT2_SUPER_MAGIC) {
 		kprintf(K_ERROR, "Not a valid ext2 filesystem\n");
@@ -615,7 +619,7 @@ static void mount_ext2() {
 
 void ext2_initialize() {
 	strcpy(fSysExt2.name, "EXT2");
-	fSysExt2.directory = direntry_ext2;
+	//fSysExt2.directory = direntry_ext2;
 	fSysExt2.mount = mount_ext2;
 	fSysExt2.open = open_ext2;
 	fSysExt2.close = close_ext2;
