@@ -32,6 +32,8 @@ void *memset(void *dest, char val, size_t len);
 // string length
 u32int strlen(const char *str);
 
+long pow(int x, int n);
+
 #define PANIC(msg) panic(msg, __FILE__, __LINE__);
 #define ASSERT(b) ((b) ? (void)0 : panic_assert(__FILE__, __LINE__, #b))
 

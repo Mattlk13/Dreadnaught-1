@@ -91,6 +91,11 @@ int kmain(multiboot_info_t *bootinfo) {
 	char *block = (char *)malloc(4);
 	initialize_syscalls();
 
+	u32int a = (u32int)pow(10, 2);
+	u32int b = (u32int)pow(2, 7);
+
+	kprintf(K_NONE, "\t10^2 is %d\n\t2^7 is %d\n", a, b);
+
 	kb_install_kb();
 
 	int i = fork();
