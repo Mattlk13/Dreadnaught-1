@@ -47,18 +47,53 @@ void draw_rect(unsigned char x, unsigned char y, unsigned char w, unsigned char 
 	}
 }
 
-void draw_bitmap(BITMAP bmp, u8int x, u8int y) {
-	for (int i = y; i < y+bmp.height; i++) {
-		for (int j = 0; j < bmp.width; j++) {
-			memset((char *)0xA0000 + (i*320+(x+j)), bmp.data[i*bmp.height+j], 1);
+void draw_bitmap(BITMAP *bmp, u8int x, u8int y) {
+	/*for (int i = y; i < y+bmp->height; i++) {
+		for (int j = 0; j < bmp->width; j++) {
+			memset((char *)0xA0000 + (i*320+(x+j)), bmp->data[i*bmp->width+j], 1);
 		}
-	}
+	}*/
+
+    for (int py = 0; py < bmp->height; py++) {
+        memcpy((char *)0xA0000 + ((y+py)*320+x), &bmp->data[py*bmp->width], bmp->width);
+    }
 }
 
 void go_text() {
 	mem_enable_paging(0);
     int32_text();
     mem_enable_paging(1);
+}
+
+void set_pixel(BITMAP *bmp, int x, int y, unsigned char color) {
+    bmp->data[y * bmp->width + x] = color;
+}
+
+void draw_table_bitmap() {
+    BITMAP *bmp;
+    bmp->width = 16;
+    bmp->height = 10;
+    bmp->data = (unsigned char *)malloc(bmp->height * bmp->width);
+
+    for (int y = 0; y < bmp->height; y++) {
+        for (int x = 0; x < bmp->width; x++) {
+            if (y < 2 || y > 7) {
+                set_pixel(bmp, x, y, 0);
+            } else if (y == 2) {
+                if (x < 2 || x > 13)
+                    set_pixel(bmp, x, y, 0);
+                else
+                    set_pixel(bmp, x, y, 4);
+            } else {
+                if (x < 4 || (x > 4 && x < 11) || x > 11)
+                    set_pixel(bmp, x, y, 0);
+                else
+                    set_pixel(bmp, x, y, 4);
+            }
+        }
+    }
+
+    draw_bitmap(bmp, 20, 20);
 }
 
 void draw() {
@@ -81,7 +116,8 @@ void draw() {
     data[1] = data[3] = data[6] = data[8] = data[10] = data[14] = data[16] = data[17] = data[18] = 4;
     bmp.data = (char *)malloc(20);
     memcpy(bmp.data, data, 20);
-    draw_bitmap(bmp, 20, 20);
+    draw_bitmap(&bmp, 20, 60);
+    draw_table_bitmap();
 
     getch();
     go_text();

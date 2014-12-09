@@ -6,9 +6,9 @@
 #include "lib/common.h"
 
 typedef struct {
-	u8int height;
-	u8int width;
-	char *data;
+	u32int height;
+	u32int width;
+	unsigned char *data;
 } BITMAP;
 
 void go_gfx();
