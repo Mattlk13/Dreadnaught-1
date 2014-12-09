@@ -2,34 +2,42 @@
 
 #include "kernel/Exception.h"
 #include "kernel/isr.h"
+#include "kernel/gfx.h"
 
 #include "lib/stdio.h"
 
 void div_by_zero(registers_t *regs) {
+	go_text();
 	PANIC("Divide By Zero");
 }
 
 void single_step_trap(registers_t *regs) {
+	go_text();
 	PANIC("Single Step Trap");
 }
 
 void nmi_trap(registers_t *regs) {
+	go_text();
 	PANIC("NMI Trap");
 }
 
 void breakpoint_trap(registers_t *regs) {
+	go_text();
 	PANIC("Breakpoint Trap");
 }
 
 void overflow_trap(registers_t *regs) {
+	go_text();
 	PANIC("Overflow Trap");
 }
 
 void bounds_check_fault(registers_t *regs) {
+	go_text();
 	PANIC("Bounds Check Fault");
 }
 
 void invalid_opcode_fault(registers_t *regs) {
+	go_text();
 	kprintf(K_ERROR, "Invalid opcode.\n");
 	kprintf(K_NONE, "\t\teip: %x, error code: %x\n", regs->eip, regs->err_code);
 
@@ -37,26 +45,32 @@ void invalid_opcode_fault(registers_t *regs) {
 }
 
 void no_device_fault(registers_t *regs) {
+	go_text();
 	PANIC("No Device Fault");
 }
 
 void double_fault_abort(registers_t *regs) {
+	go_text();
 	PANIC("Double Fault Abort");
 }
 
 void invalid_tss_fault(registers_t *regs) {
+	go_text();
 	PANIC("Invalid TSS Fault");
 }
 
 void no_segment_fault(registers_t *regs) {
+	go_text();
 	PANIC("No Segment Fault");
 }
 
 void stack_fault(registers_t *regs) {
+	go_text();
 	PANIC("Stack Fault");
 }
 
 void general_protection_fault(registers_t *regs) {
+	go_text();
 	PANIC("General Protection Fault");
 }
 

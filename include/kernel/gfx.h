@@ -12,5 +12,7 @@ typedef struct {
 } BITMAP;
 
 void go_gfx();
+void go_text();
+void draw_bitmap(BITMAP *bmp, u32int x, u32int y);
 
 #endif

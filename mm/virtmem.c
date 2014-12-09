@@ -4,6 +4,7 @@
 #include "mm/physmem.h"
 
 #include "kernel/isr.h"
+#include "kernel/gfx.h"
 
 #include "io/monitor.h"
 
@@ -260,6 +261,8 @@ pdirectory *virt_clone_directory(pdirectory *src) {
 }
 
 void page_fault(registers_t *regs) {
+	go_text();
+
 	u32int fault_addr;
 	asm("mov %%cr2, %0" : "=r"(fault_addr));
 
