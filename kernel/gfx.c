@@ -66,6 +66,7 @@ void go_text() {
     int32_text();
     mem_enable_paging(1);
     mon_clear();
+    kprintf(K_OK, "Exited GFX mode\n");
 }
 
 void set_pixel(BITMAP *bmp, int x, int y, unsigned char color) {
@@ -110,6 +111,8 @@ void draw() {
     /*for(int y = 50; y < 150; y++)
         memset((char *)0xA0000 + (y*320+80), y, 160);*/
 
+    init_font();
+    
     BITMAP bmp;
     bmp.height = 7;
     bmp.width = 6;
@@ -125,7 +128,7 @@ void draw() {
     memcpy(bmp.data, data, 6*7);
     draw_bitmap(&bmp, 20, 60);
     draw_table_bitmap();
-    init_font();
+    
 
     getch();
     go_text();
