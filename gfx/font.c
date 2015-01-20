@@ -255,15 +255,16 @@ void init_font() {
     memcpy(font_set[i].data, s, CHAR_BYTE_SIZE);
     i++;
 
-    char t[] = {0,0,15,0,0,0,\
-                0,15,15,15,0,0,\
-                0,0,15,0,0,0,\
-                0,0,15,0,0,0,\
-                0,0,15,0,0,0,\
-                0,0,15,0,0,0,\
-                0,0,0,15,0,0};
-    font_set[i].data = (unsigned char *)malloc(CHAR_BYTE_SIZE);
-    memcpy(font_set[i].data, t, CHAR_BYTE_SIZE);
+    font_set[i].width = 4;
+    char t[] = {0,0,15,0,\
+                0,15,15,15,\
+                0,0,15,0,\
+                0,0,15,0,\
+                0,0,15,0,\
+                0,0,15,0,\
+                0,0,0,15};
+    font_set[i].data = (unsigned char *)malloc(font_set[i].width*FONT_HEIGHT);
+    memcpy(font_set[i].data, t, font_set[i].width*FONT_HEIGHT);
     i++;
 
     char u[] = {0,0,0,0,0,0,\
