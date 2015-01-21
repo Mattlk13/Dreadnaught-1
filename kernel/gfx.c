@@ -4,6 +4,7 @@
 #include "lib/stdio.h"
 #include "gfx/font.h"
 #include "io/monitor.h"
+#include "kernel/cmd.h"
 
 // define our structure
 typedef struct __attribute__ ((packed)) {
@@ -132,6 +133,7 @@ void draw() {
 
     getch();
     go_text();
+    start_cmd_prompt();
 }
 
 void go_gfx() {
